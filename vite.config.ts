@@ -14,7 +14,7 @@ export default defineConfig({
     runtimeErrorOverlay(),
     glsl(), // Add GLSL shader support
   ],
-  base: "./",
+  base: "/base-reaction/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client", "src"),
