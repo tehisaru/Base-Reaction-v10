@@ -9,15 +9,8 @@ channel = "stable-24_05"
 deploymentTarget = "cloudrun"
 run = ["sh", "-c", "npm run dev"]
 
-[[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
-localPort = 5173
-
 [workflows]
-runButton = "Start Game"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
