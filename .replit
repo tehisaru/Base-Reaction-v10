@@ -10,7 +10,7 @@ deploymentTarget = "cloudrun"
 run = ["sh", "-c", "npm run dev"]
 
 [workflows]
-runButton = "Start Server"
+runButton = "Start Dev Server"
 
 [[workflows.workflow]]
 name = "Project"
@@ -37,10 +37,10 @@ args = "npm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
-name = "Start Server"
+name = "Start Dev Server"
 author = 42503721
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "npm run dev -- --host"
