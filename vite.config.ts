@@ -14,6 +14,7 @@ export default defineConfig({
     runtimeErrorOverlay(),
     glsl(), // Add GLSL shader support
   ],
+  base: "./",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client", "src"),
@@ -22,9 +23,8 @@ export default defineConfig({
   },
   root: path.resolve(__dirname, "client"),
   build: {
-    outDir: path.resolve(__dirname, "dist/public"),
+    outDir: "dist",
     emptyOutDir: true,
   },
-  // Add support for large models and audio files
   assetsInclude: ["**/*.gltf", "**/*.glb", "**/*.mp3", "**/*.ogg", "**/*.wav"],
 });

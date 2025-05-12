@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "homepage": "https://YOUR_USERNAME.github.io/REPO_NAME",
   "scripts": {
-    "dev": "tsx server/index.ts",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "start": "NODE_ENV=production node dist/index.js",
+    "dev": "vite",
+    "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "check": "tsc",
     "db:push": "drizzle-kit push"
   },
@@ -53,6 +55,7 @@
     "express": "^4.21.2",
     "express-session": "^1.18.1",
     "framer-motion": "^11.18.2",
+    "gh-pages": "^6.3.0",
     "gl-matrix": "^3.4.3",
     "gsap": "^3.12.5",
     "howler": "^2.2.4",
