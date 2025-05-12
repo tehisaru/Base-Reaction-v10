@@ -6,7 +6,7 @@ import NotFound from "./pages/not-found";
 
 function App() {
   return (
-    <BrowserRouter basename={process.env.PUBLIC_URL}>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/classic" element={<ClassicMode />} />
