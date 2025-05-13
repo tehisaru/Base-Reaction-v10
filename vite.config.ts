@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path, { dirname } from "path";
@@ -12,9 +13,16 @@ export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
-    glsl(), // Add GLSL shader support
+    glsl(),
   ],
   base: "/base-reaction/",
+  server: {
+    host: true,
+    hmr: {
+      clientPort: 443,
+      protocol: 'wss'
+    }
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client", "src"),
