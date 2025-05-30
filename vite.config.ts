@@ -15,9 +15,11 @@ export default defineConfig({
     runtimeErrorOverlay(),
     glsl(),
   ],
-  base: "/base-reaction/",
+  base: "/",
   server: {
-    host: true,
+    host: "0.0.0.0",
+    port: 5000,
+    strictPort: true,
     hmr: {
       clientPort: 443,
       protocol: 'wss'
