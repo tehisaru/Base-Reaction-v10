@@ -105,41 +105,51 @@ const BoardCell: React.FC<BoardCellProps> = ({
       {/* Power-up icon if present - completely flat with same transition speed and strong green glow */}
       {powerUpType && cell.atoms === 0 && (
         <div className="absolute inset-0 flex items-center justify-center"
-          style={{ transition: "all 0.3s ease" }} // Match the background transition speed
+          style={{ 
+            transition: "all 0.3s ease", // Match the background transition speed
+            overflow: "visible", // Allow glow to extend beyond boundaries
+            zIndex: 10 // Ensure glow appears on top
+          }}
         >
           {powerUpType === 'diamond' && (
-            <svg 
-              width="26" 
-              height="26" 
-              viewBox="0 0 24 24" 
-              fill="rgb(50, 200, 50)" 
-              stroke="rgb(0, 200, 0)" 
-              strokeWidth="1"
-              style={{ 
-                transition: "all 0.3s ease", // Match the background transition speed
-                filter: "drop-shadow(0 0 8px rgb(0, 255, 0))", // Strong green glow
-                boxShadow: "0 0 15px rgba(0, 255, 0, 0.6)" // Additional strong glow
-              }}
-            >
-              <path d="M12 2L2 12L12 22L22 12L12 2Z" />
-            </svg>
+            <div style={{
+              filter: "drop-shadow(0 0 12px rgb(0, 255, 0)) drop-shadow(0 0 20px rgba(0, 255, 0, 0.5))", // Strong green glow without container clipping
+              transition: "all 0.3s ease"
+            }}>
+              <svg 
+                width="26" 
+                height="26" 
+                viewBox="0 0 24 24" 
+                fill="rgb(50, 200, 50)" 
+                stroke="rgb(0, 200, 0)" 
+                strokeWidth="1"
+                style={{ 
+                  transition: "all 0.3s ease" // Match the background transition speed
+                }}
+              >
+                <path d="M12 2L2 12L12 22L22 12L12 2Z" />
+              </svg>
+            </div>
           )}
           {powerUpType === 'heart' && (
-            <svg 
-              width="26" 
-              height="26" 
-              viewBox="0 0 24 24" 
-              fill="rgb(50, 200, 50)" 
-              stroke="rgb(0, 200, 0)" 
-              strokeWidth="1"
-              style={{ 
-                transition: "all 0.3s ease", // Match the background transition speed
-                filter: "drop-shadow(0 0 8px rgb(0, 255, 0))", // Strong green glow
-                boxShadow: "0 0 15px rgba(0, 255, 0, 0.6)" // Additional strong glow
-              }}
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
+            <div style={{
+              filter: "drop-shadow(0 0 12px rgb(0, 255, 0)) drop-shadow(0 0 20px rgba(0, 255, 0, 0.5))", // Strong green glow without container clipping
+              transition: "all 0.3s ease"
+            }}>
+              <svg 
+                width="26" 
+                height="26" 
+                viewBox="0 0 24 24" 
+                fill="rgb(50, 200, 50)" 
+                stroke="rgb(0, 200, 0)" 
+                strokeWidth="1"
+                style={{ 
+                  transition: "all 0.3s ease" // Match the background transition speed
+                }}
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </div>
           )}
         </div>
       )}
@@ -205,19 +215,62 @@ const BoardCell: React.FC<BoardCellProps> = ({
           <AnimatePresence>
             {isHQDamaged && (
               <>
-                {/* Only keep the explosion ring effect */}
+                {/* Electrical damage effect - black flash with cyan glow */}
                 <motion.div
                   className="absolute inset-0 rounded-full"
-                  initial={{ scale: 0.8, opacity: 0.8 }}
-                  animate={{ scale: 2, opacity: 0 }}
+                  initial={{ scale: 1, opacity: 0 }}
+                  animate={{ 
+                    scale: [1, 1.2, 1], 
+                    opacity: [0, 1, 0],
+                    backgroundColor: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.8)', 'rgba(0, 0, 0, 0)']
+                  }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.7 }}
+                  transition={{ duration: 0.3, times: [0, 0.5, 1] }}
                   style={{
-                    backgroundColor: 'transparent',
-                    border: `3px solid ${PLAYER_COLORS[cell.player!]}`,
-                    boxShadow: 'none' // No shadow for flat design
+                    boxShadow: '0 0 20px cyan, 0 0 40px cyan, 0 0 60px rgba(0, 255, 255, 0.5)',
+                    border: '2px solid cyan'
                   }}
                 />
+                
+                {/* 100 gray particles exploding in all directions */}
+                {Array.from({ length: 100 }).map((_, i) => {
+                  const angle = (i * 360) / 100 + Math.random() * 10; // Spread particles evenly with slight randomness
+                  const distance = 30 + Math.random() * 50;
+                  const size = 2 + Math.random() * 4;
+                  const grayShade = 100 + Math.random() * 100; // Different shades of gray
+                  
+                  return (
+                    <motion.div
+                      key={`damage-particle-${i}`}
+                      className="absolute rounded-full"
+                      initial={{ 
+                        scale: 0, 
+                        opacity: 1,
+                        x: 0,
+                        y: 0
+                      }}
+                      animate={{ 
+                        scale: [0, 1, 0.8, 0],
+                        opacity: [1, 0.8, 0.4, 0],
+                        x: Math.cos(angle * Math.PI / 180) * distance,
+                        y: Math.sin(angle * Math.PI / 180) * distance
+                      }}
+                      exit={{ opacity: 0 }}
+                      transition={{ 
+                        duration: 1.5, 
+                        delay: i * 0.005, // Stagger the particles slightly
+                        ease: "easeOut"
+                      }}
+                      style={{
+                        width: size,
+                        height: size,
+                        backgroundColor: `rgb(${grayShade}, ${grayShade}, ${grayShade})`,
+                        left: '50%',
+                        top: '50%'
+                      }}
+                    />
+                  );
+                })}
               </>
             )}
           </AnimatePresence>
@@ -245,101 +298,56 @@ const BoardCell: React.FC<BoardCellProps> = ({
           <AnimatePresence>
             {isHQDestroyed && (
               <>
-                {/* Violent destruction effect with multiple expanding rings */}
+                {/* Same electrical destruction effect as damage but more intense */}
                 <motion.div
                   className="absolute inset-0 rounded-full"
-                  initial={{ scale: 0.5, opacity: 1 }}
-                  animate={{ scale: 3, opacity: 0 }}
+                  initial={{ scale: 1, opacity: 0 }}
+                  animate={{ 
+                    scale: [1, 1.5, 1.2, 1], 
+                    opacity: [0, 1, 0.8, 0],
+                    backgroundColor: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 0.8)', 'rgba(0, 0, 0, 0)']
+                  }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  transition={{ duration: 0.8, times: [0, 0.3, 0.7, 1] }}
                   style={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    border: `4px solid rgba(255, 255, 255, 0.8)`,
+                    boxShadow: '0 0 30px cyan, 0 0 60px cyan, 0 0 90px rgba(0, 255, 255, 0.7)',
+                    border: '3px solid cyan'
                   }}
                 />
                 
-                {/* Secondary explosion ring */}
-                <motion.div
-                  className="absolute inset-0 rounded-full"
-                  initial={{ scale: 0.3, opacity: 0.8 }}
-                  animate={{ scale: 2.5, opacity: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: `3px solid rgba(255, 100, 100, 0.9)`,
-                  }}
-                />
-                
-                {/* Gray smoke particles */}
-                {Array.from({ length: 8 }).map((_, i) => {
-                  const angle = (i * 360) / 8;
-                  const distance = 40 + Math.random() * 30;
+                {/* 100 gray particles exploding in all directions - same as damage but more intense */}
+                {Array.from({ length: 100 }).map((_, i) => {
+                  const angle = (i * 360) / 100 + Math.random() * 15; // More spread for destruction
+                  const distance = 40 + Math.random() * 60; // Farther spread
+                  const size = 2 + Math.random() * 5; // Slightly larger particles
+                  const grayShade = 80 + Math.random() * 120; // More variety in gray shades
+                  
                   return (
                     <motion.div
-                      key={`smoke-${i}`}
+                      key={`destroy-particle-${i}`}
                       className="absolute rounded-full"
                       initial={{ 
-                        scale: 0.1, 
-                        opacity: 0.8,
+                        scale: 0, 
+                        opacity: 1,
                         x: 0,
                         y: 0
                       }}
                       animate={{ 
-                        scale: [0.1, 0.8, 0.4, 0],
-                        opacity: [0.8, 0.6, 0.3, 0],
+                        scale: [0, 1.2, 0.9, 0],
+                        opacity: [1, 0.9, 0.5, 0],
                         x: Math.cos(angle * Math.PI / 180) * distance,
                         y: Math.sin(angle * Math.PI / 180) * distance
                       }}
                       exit={{ opacity: 0 }}
                       transition={{ 
-                        duration: 1.2, 
-                        delay: i * 0.05,
+                        duration: 2.0, // Longer duration for destruction
+                        delay: i * 0.003, // Faster stagger for more chaos
                         ease: "easeOut"
                       }}
                       style={{
-                        width: 8 + Math.random() * 6,
-                        height: 8 + Math.random() * 6,
-                        backgroundColor: `rgba(${100 + Math.random() * 50}, ${100 + Math.random() * 50}, ${100 + Math.random() * 50}, 0.7)`,
-                        left: '50%',
-                        top: '50%'
-                      }}
-                    />
-                  );
-                })}
-                
-                {/* Additional debris particles */}
-                {Array.from({ length: 12 }).map((_, i) => {
-                  const angle = Math.random() * 360;
-                  const distance = 20 + Math.random() * 50;
-                  return (
-                    <motion.div
-                      key={`debris-${i}`}
-                      className="absolute"
-                      initial={{ 
-                        scale: 1, 
-                        opacity: 1,
-                        x: 0,
-                        y: 0,
-                        rotate: 0
-                      }}
-                      animate={{ 
-                        scale: [1, 0.5, 0],
-                        opacity: [1, 0.4, 0],
-                        x: Math.cos(angle * Math.PI / 180) * distance,
-                        y: Math.sin(angle * Math.PI / 180) * distance,
-                        rotate: Math.random() * 720
-                      }}
-                      exit={{ opacity: 0 }}
-                      transition={{ 
-                        duration: 1.0, 
-                        delay: i * 0.03,
-                        ease: "easeOut"
-                      }}
-                      style={{
-                        width: 3 + Math.random() * 4,
-                        height: 3 + Math.random() * 4,
-                        backgroundColor: `rgba(${150 + Math.random() * 50}, ${120 + Math.random() * 50}, ${120 + Math.random() * 50}, 0.9)`,
+                        width: size,
+                        height: size,
+                        backgroundColor: `rgb(${grayShade}, ${grayShade}, ${grayShade})`,
                         left: '50%',
                         top: '50%'
                       }}

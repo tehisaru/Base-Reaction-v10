@@ -208,8 +208,14 @@ const MainMenu: React.FC = () => {
     navigate(`/${selectedMode}`);
   };
   
-  // Toggle player control between human and AI
+  // Toggle player control between human and AI (disabled in multiplayer mode)
   const togglePlayerControl = (player: PLAYER) => {
+    // In multiplayer mode, all players must be human - no AI allowed
+    if (menuScreen === 'multiplayer') {
+      console.log('AI players are not allowed in multiplayer mode');
+      return;
+    }
+    
     const updatedConfigs = [...playerConfigs];
     const playerIndex = updatedConfigs.findIndex(config => config.player === player);
     
@@ -475,20 +481,8 @@ const MainMenu: React.FC = () => {
       
       {/* Tutorial Content */}
       {menuScreen === 'tutorial-content' && (
-        <div className="w-full max-w-3xl">
-          <TutorialScreen mode={tutorialMode} />
-          <div className="mt-4 flex justify-center">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.1 }}
-              onClick={() => setMenuScreen('tutorial')}
-              className={`${buttonStyle.back}`}
-              style={{ fontFamily: 'Menlo, monospace' }}
-            >
-              Back to Tutorial Selection
-            </motion.button>
-          </div>
+        <div className="w-full max-w-3xl mt-16"> {/* Add top margin to avoid overlaying title */}
+          <TutorialScreen mode={tutorialMode} onBack={() => setMenuScreen('tutorial')} />
         </div>
       )}
       
@@ -500,12 +494,8 @@ const MainMenu: React.FC = () => {
           transition={{ duration: 0.3 }}
           className="bg-black p-8 w-80"
         >
-          <h2 className="text-2xl font-bold mb-6 text-center" style={{ fontFamily: 'Menlo, monospace' }}>
-            Multiplayer Setup
-          </h2>
-          
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3" style={{ fontFamily: 'Menlo, monospace' }}>Number of Players</h3>
+            <h3 className="text-xl font-semibold mb-3" style={{ fontFamily: 'Menlo, monospace' }}>Number of Players</h3>
             <div className="grid grid-cols-3 gap-4">
               {[2, 3, 4].map((num) => (
                 <motion.button
@@ -533,7 +523,7 @@ const MainMenu: React.FC = () => {
               {playerConfigs.map((config) => (
                 <div 
                   key={config.player} 
-                  className="w-12 h-12 rounded-full border-2 border-white"
+                  className={`w-12 h-12 rounded-full ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
                   style={{ 
                     backgroundColor: PLAYER_COLORS[config.player]
                   }}

@@ -53,20 +53,21 @@ const GameControls: React.FC<GameControlsProps> = ({
         transition: "background-color 0.5s ease"
       }}
     >
-      <div className="flex items-center space-x-8">
+      <div className="flex items-center space-x-12">
         <button
           onClick={onUndo}
           disabled={!canUndo}
-          className={`px-6 py-3 rounded-xl text-white text-base font-medium transition-all duration-500 ${
+          className={`px-8 py-4 rounded-xl text-white text-lg font-medium transition-all duration-500 ${
             canUndo 
               ? "hover:opacity-80" 
               : "opacity-50 cursor-not-allowed"
           }`}
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: PLAYER_BG_COLORS[currentPlayer],
+            backgroundColor: `rgba(0, 0, 0, 0.6)`, // Dark semi-transparent
             border: 'none',
-            transition: "background-color 0.5s ease, opacity 0.3s ease"
+            transition: "all 0.5s ease",
+            backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >
           Undo
@@ -74,12 +75,13 @@ const GameControls: React.FC<GameControlsProps> = ({
 
         <button
           onClick={onRestart}
-          className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
+          className="px-8 py-4 rounded-xl text-white text-lg font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: PLAYER_BG_COLORS[currentPlayer],
+            backgroundColor: `rgba(0, 0, 0, 0.6)`, // Dark semi-transparent
             border: 'none',
-            transition: "background-color 0.5s ease, opacity 0.3s ease"
+            transition: "all 0.5s ease",
+            backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >
           Restart
@@ -87,12 +89,13 @@ const GameControls: React.FC<GameControlsProps> = ({
 
         <button
           onClick={() => navigate("/")}
-          className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
+          className="px-8 py-4 rounded-xl text-white text-lg font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: PLAYER_BG_COLORS[currentPlayer],
+            backgroundColor: `rgba(0, 0, 0, 0.6)`, // Dark semi-transparent
             border: 'none',
-            transition: "background-color 0.5s ease, opacity 0.3s ease"
+            transition: "all 0.5s ease",
+            backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >
           Menu

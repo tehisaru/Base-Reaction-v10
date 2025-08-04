@@ -4,15 +4,16 @@ import { motion } from "framer-motion";
 
 interface TutorialScreenProps {
   mode: "classic" | "base-reaction";
+  onBack?: () => void; // Optional callback to handle back navigation
 }
 
 const typewriterFont = { fontFamily: 'Menlo, monospace' };
 
-const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode }) => {
+const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
   const navigate = useNavigate();
   
   return (
-    <div className="min-h-screen bg-black p-4 py-8 overflow-y-auto">
+    <div className="bg-black p-4 py-8 overflow-y-auto">
       <h1 className="text-3xl font-bold mb-6 text-center text-white" style={typewriterFont}>
         {mode === "classic" ? "Classic Mode" : "Base Reaction Mode"} Tutorial
       </h1>
@@ -120,7 +121,13 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode }) => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/")}
+            onClick={() => {
+              if (onBack) {
+                onBack(); // Use callback if provided (when accessed from MainMenu)
+              } else {
+                navigate("/"); // Fallback to home navigation
+              }
+            }}
             className="py-4 px-8 rounded-2xl text-white font-semibold bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white"
             style={typewriterFont}
           >
