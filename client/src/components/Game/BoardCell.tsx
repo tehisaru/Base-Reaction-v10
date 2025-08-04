@@ -27,6 +27,7 @@ type BoardCellProps = {
   hqHealth?: number;
   isHQDamaged?: boolean; // Track if this HQ cell was just damaged
   isHQHealed?: boolean; // Track if this HQ cell was just healed
+  isHQDestroyed?: boolean; // Track if this HQ cell was just destroyed
 };
 
 const BoardCell: React.FC<BoardCellProps> = ({
@@ -41,7 +42,8 @@ const BoardCell: React.FC<BoardCellProps> = ({
   isHQ,
   hqHealth,
   isHQDamaged,
-  isHQHealed
+  isHQHealed,
+  isHQDestroyed
 }) => {
   const criticalMass = calculateCriticalMass(row, col, totalRows, totalCols);
   const aboutToExplode = isAboutToExplode(cell, row, col, totalRows, totalCols);
@@ -201,6 +203,114 @@ const BoardCell: React.FC<BoardCellProps> = ({
                     boxShadow: 'none' // No shadow for flat design
                   }}
                 />
+              </>
+            )}
+          </AnimatePresence>
+          
+          <AnimatePresence>
+            {isHQDestroyed && (
+              <>
+                {/* Violent destruction effect with multiple expanding rings */}
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  initial={{ scale: 0.5, opacity: 1 }}
+                  animate={{ scale: 3, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    border: `4px solid rgba(255, 255, 255, 0.8)`,
+                  }}
+                />
+                
+                {/* Secondary explosion ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  initial={{ scale: 0.3, opacity: 0.8 }}
+                  animate={{ scale: 2.5, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: `3px solid rgba(255, 100, 100, 0.9)`,
+                  }}
+                />
+                
+                {/* Gray smoke particles */}
+                {Array.from({ length: 8 }).map((_, i) => {
+                  const angle = (i * 360) / 8;
+                  const distance = 40 + Math.random() * 30;
+                  return (
+                    <motion.div
+                      key={`smoke-${i}`}
+                      className="absolute rounded-full"
+                      initial={{ 
+                        scale: 0.1, 
+                        opacity: 0.8,
+                        x: 0,
+                        y: 0
+                      }}
+                      animate={{ 
+                        scale: [0.1, 0.8, 0.4, 0],
+                        opacity: [0.8, 0.6, 0.3, 0],
+                        x: Math.cos(angle * Math.PI / 180) * distance,
+                        y: Math.sin(angle * Math.PI / 180) * distance
+                      }}
+                      exit={{ opacity: 0 }}
+                      transition={{ 
+                        duration: 1.2, 
+                        delay: i * 0.05,
+                        ease: "easeOut"
+                      }}
+                      style={{
+                        width: 8 + Math.random() * 6,
+                        height: 8 + Math.random() * 6,
+                        backgroundColor: `rgba(${100 + Math.random() * 50}, ${100 + Math.random() * 50}, ${100 + Math.random() * 50}, 0.7)`,
+                        left: '50%',
+                        top: '50%'
+                      }}
+                    />
+                  );
+                })}
+                
+                {/* Additional debris particles */}
+                {Array.from({ length: 12 }).map((_, i) => {
+                  const angle = Math.random() * 360;
+                  const distance = 20 + Math.random() * 50;
+                  return (
+                    <motion.div
+                      key={`debris-${i}`}
+                      className="absolute"
+                      initial={{ 
+                        scale: 1, 
+                        opacity: 1,
+                        x: 0,
+                        y: 0,
+                        rotate: 0
+                      }}
+                      animate={{ 
+                        scale: [1, 0.5, 0],
+                        opacity: [1, 0.4, 0],
+                        x: Math.cos(angle * Math.PI / 180) * distance,
+                        y: Math.sin(angle * Math.PI / 180) * distance,
+                        rotate: Math.random() * 720
+                      }}
+                      exit={{ opacity: 0 }}
+                      transition={{ 
+                        duration: 1.0, 
+                        delay: i * 0.03,
+                        ease: "easeOut"
+                      }}
+                      style={{
+                        width: 3 + Math.random() * 4,
+                        height: 3 + Math.random() * 4,
+                        backgroundColor: `rgba(${150 + Math.random() * 50}, ${120 + Math.random() * 50}, ${120 + Math.random() * 50}, 0.9)`,
+                        left: '50%',
+                        top: '50%'
+                      }}
+                    />
+                  );
+                })}
               </>
             )}
           </AnimatePresence>

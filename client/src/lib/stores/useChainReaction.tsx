@@ -33,13 +33,13 @@ export type GameHistory = {
   };
 };
 
-// HQ effect tracking (damage or healing)
+// HQ effect tracking (damage, healing, or destruction)
 type HQDamageEffect = {
   row: number;
   col: number;
   player: PLAYER;
   timestamp: number;
-  type: 'damage' | 'heal'; // Indicates whether the HQ lost or gained health
+  type: 'damage' | 'heal' | 'destroyed'; // Indicates whether the HQ lost, gained health, or was destroyed
 };
 
 interface ChainReactionState {
@@ -837,20 +837,43 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                       targetHQ.health -= 1;
                       console.log(`Enemy HQ damaged! Health now: ${targetHQ.health}`);
 
-                      // ALWAYS trigger animation when health changes
-                      // This ensures animation happens for every health change
-                      set(state => ({
-                        ...state,
-                        // Add a transient property to track the position of the HQ explosion
-                        // This will be used by the BoardCell component to display the explosion
-                        lastHQDamaged: { 
-                          row: targetHQ.row, 
-                          col: targetHQ.col, 
-                          player: targetHQ.player,
-                          timestamp: Date.now(), // Add timestamp to ensure uniqueness for react key
-                          type: 'damage' // Mark as damage effect
-                        }
-                      }));
+                      // Check if HQ was destroyed (health <= 0)
+                      if (targetHQ.health <= 0) {
+                        console.log(`HQ DESTROYED at (${targetHQ.row}, ${targetHQ.col})!`);
+                        
+                        // Trigger violent destruction animation
+                        set(state => ({
+                          ...state,
+                          lastHQDamaged: { 
+                            row: targetHQ.row, 
+                            col: targetHQ.col, 
+                            player: targetHQ.player,
+                            timestamp: Date.now(),
+                            type: 'destroyed' // Mark as destruction effect
+                          }
+                        }));
+                        
+                        // Remove HQ from the list after a delay to allow animation
+                        setTimeout(() => {
+                          set(state => ({
+                            hqs: state.hqs.filter(hq => !(hq.row === targetHQ.row && hq.col === targetHQ.col))
+                          }));
+                          console.log(`HQ removed from board at (${targetHQ.row}, ${targetHQ.col})`);
+                        }, 1500); // Wait for destruction animation to complete
+                        
+                      } else {
+                        // Regular damage animation
+                        set(state => ({
+                          ...state,
+                          lastHQDamaged: { 
+                            row: targetHQ.row, 
+                            col: targetHQ.col, 
+                            player: targetHQ.player,
+                            timestamp: Date.now(),
+                            type: 'damage'
+                          }
+                        }));
+                      }
                     }
                     // Skip adding atoms to any HQ cell
                     return;

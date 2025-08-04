@@ -155,6 +155,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   hqHealth={health}
                   isHQDamaged={isHQEffected && hqEffectType === 'damage'}
                   isHQHealed={isHQEffected && hqEffectType === 'heal'}
+                  isHQDestroyed={isHQEffected && hqEffectType === 'destroyed'}
                 />
               </motion.div>
             );

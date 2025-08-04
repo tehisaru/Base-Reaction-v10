@@ -241,26 +241,28 @@ const MainMenu: React.FC = () => {
     navigate(`/${selectedMode}`);
   };
   
-  // Button style for consistent UI
+  // Button style for consistent UI - all buttons same height and quick animations
   const buttonStyle = {
-    base: "py-3 px-6 rounded-xl text-white text-sm transition-all duration-200 border-2 border-white w-full",
+    base: "py-4 px-6 rounded-xl text-white text-base transition-all duration-100 border-2 border-white w-full h-14 flex items-center justify-center",
     primary: "bg-black hover:bg-gray-800",
     selected: "bg-white text-black hover:bg-gray-200",
-    back: "py-3 px-6 rounded-xl text-white text-sm border-2 border-white hover:bg-gray-800 transition-all duration-200 w-full",
+    back: "py-4 px-6 rounded-xl text-white text-base border-2 border-white hover:bg-gray-800 transition-all duration-100 w-full h-14 flex items-center justify-center",
   };
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4">
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8"
-      >
-        <h1 className="text-4xl font-bold text-center text-white" style={{ fontFamily: 'Menlo, monospace' }}>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4 pt-32">
+      {/* Fixed position title - larger and always visible */}
+      <div className="fixed top-8 left-0 right-0 z-10">
+        <motion.h1 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-6xl font-bold text-center text-white mb-4" 
+          style={{ fontFamily: 'Menlo, monospace' }}
+        >
           Base Reaction
-        </h1>
-      </motion.div>
+        </motion.h1>
+      </div>
       
       {/* Main Menu Screen */}
       {menuScreen === 'main' && (
@@ -268,40 +270,43 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 max-w-md w-full"
+          className="bg-black p-8 w-80"
         >
           <div className="grid grid-cols-1 gap-4 w-full">
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
               onClick={() => {
                 setSelectedMode('classic');
                 setMenuScreen('mode');
               }}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-3 w-full text-center`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Classic Mode
             </motion.button>
             
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
               onClick={() => {
                 setSelectedMode('base-reaction');
                 setMenuScreen('mode');
               }}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-3 w-full text-center`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Base Reaction
             </motion.button>
             
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
               onClick={() => setMenuScreen('tutorial')}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-3 w-full text-center`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Tutorial
@@ -316,7 +321,7 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 max-w-md w-full"
+          className="bg-black p-8 w-80"
         >
           <h2 className="text-xl font-bold mb-4 text-center" style={{ fontFamily: 'Menlo, monospace' }}>
             {selectedMode === 'classic' ? 'Classic Mode' : 'Base Reaction Mode'}
@@ -324,20 +329,22 @@ const MainMenu: React.FC = () => {
           
           <div className="grid grid-cols-1 gap-3 mb-4">
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
               onClick={() => setMenuScreen('singleplayer')}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-3`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Singleplayer
             </motion.button>
             
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
               onClick={() => setMenuScreen('multiplayer')}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-3`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Multiplayer
@@ -345,10 +352,11 @@ const MainMenu: React.FC = () => {
           </div>
           
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.1 }}
             onClick={() => setMenuScreen('main')}
-            className={`${buttonStyle.back} w-full text-center`}
+            className={`${buttonStyle.back}`}
             style={{ fontFamily: 'Menlo, monospace' }}
           >
             Back
@@ -362,7 +370,7 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 max-w-md w-full"
+          className="bg-black p-8 w-80"
         >
           <h2 className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: 'Menlo, monospace' }}>
             Select AI Difficulty
@@ -373,7 +381,7 @@ const MainMenu: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setupSingleplayer(AI_DIFFICULTY.EASY)}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-5`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Easy
@@ -383,7 +391,7 @@ const MainMenu: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setupSingleplayer(AI_DIFFICULTY.MEDIUM)}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-5`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Medium
@@ -393,7 +401,7 @@ const MainMenu: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setupSingleplayer(AI_DIFFICULTY.HARD)}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-5`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Hard
@@ -418,7 +426,7 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 max-w-md w-full"
+          className="bg-black p-8 w-80"
         >
           <h2 className="text-2xl font-bold mb-6 text-center" style={{ fontFamily: 'Menlo, monospace' }}>
             Select Tutorial
@@ -432,7 +440,7 @@ const MainMenu: React.FC = () => {
                 setTutorialMode('classic');
                 setMenuScreen('tutorial-content');
               }}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-5`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Classic Mode
@@ -445,7 +453,7 @@ const MainMenu: React.FC = () => {
                 setTutorialMode('base-reaction');
                 setMenuScreen('tutorial-content');
               }}
-              className={`${buttonStyle.base} ${buttonStyle.primary} py-5`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Base Reaction Mode
@@ -453,10 +461,11 @@ const MainMenu: React.FC = () => {
           </div>
           
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.1 }}
             onClick={() => setMenuScreen('main')}
-            className={`${buttonStyle.back} w-full text-center`}
+            className={`${buttonStyle.back}`}
             style={{ fontFamily: 'Menlo, monospace' }}
           >
             Back
@@ -470,10 +479,11 @@ const MainMenu: React.FC = () => {
           <TutorialScreen mode={tutorialMode} />
           <div className="mt-4 flex justify-center">
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
               onClick={() => setMenuScreen('tutorial')}
-              className="py-3 px-6 bg-black hover:bg-gray-800 rounded-2xl text-white font-semibold transition-all duration-300 border-2 border-white"
+              className={`${buttonStyle.back}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Back to Tutorial Selection
@@ -488,7 +498,7 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 max-w-md w-full"
+          className="bg-black p-8 w-80"
         >
           <h2 className="text-2xl font-bold mb-6 text-center" style={{ fontFamily: 'Menlo, monospace' }}>
             Multiplayer Setup
@@ -500,13 +510,14 @@ const MainMenu: React.FC = () => {
               {[2, 3, 4].map((num) => (
                 <motion.button
                   key={num}
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.1 }}
                   onClick={() => handleNumPlayersChange(num as 2 | 3 | 4)}
-                  className={`py-4 px-0 rounded-2xl border-2 border-white text-xl ${
+                  className={`h-14 px-6 rounded-xl border-2 border-white text-xl transition-all duration-100 flex items-center justify-center ${
                     numPlayers === num 
-                      ? buttonStyle.selected
-                      : buttonStyle.primary
+                      ? 'bg-white text-black hover:bg-gray-200'
+                      : 'bg-black hover:bg-gray-800 text-white'
                   }`}
                   style={{ fontFamily: 'Menlo, monospace' }}
                 >
@@ -517,41 +528,38 @@ const MainMenu: React.FC = () => {
           </div>
           
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
-            <div className="grid grid-cols-1 gap-4">
+            <h3 className="text-lg font-semibold mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
+            <div className="flex justify-center gap-4">
               {playerConfigs.map((config) => (
                 <div 
                   key={config.player} 
-                  className="flex items-center p-4 rounded-xl"
+                  className="w-12 h-12 rounded-full border-2 border-white"
                   style={{ 
-                    backgroundColor: PLAYER_COLORS[config.player],
-                    opacity: 0.9
+                    backgroundColor: PLAYER_COLORS[config.player]
                   }}
-                >
-                  <span className="font-semibold text-xl" style={{ fontFamily: 'Menlo, monospace' }}>
-                    {config.player.charAt(0).toUpperCase() + config.player.slice(1)} Player
-                  </span>
-                </div>
+                />
               ))}
             </div>
           </div>
           
           <div className="grid grid-cols-1 gap-4">
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
               onClick={saveAndStartGame}
-              className={`${buttonStyle.base} ${buttonStyle.primary} text-center`}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Start Game
             </motion.button>
             
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
               onClick={() => setMenuScreen('mode')}
-              className={`${buttonStyle.back} text-center`}
+              className={`${buttonStyle.back}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               Back
