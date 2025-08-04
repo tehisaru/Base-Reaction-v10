@@ -161,31 +161,6 @@ const BoardCell: React.FC<BoardCellProps> = ({
             padding: '2px' // Add padding to make space for the circle
           }}
         >
-          {/* Mold/damage spots when HQ has lost health */}
-          {hqHealth < maxHqHealth && Array.from({ length: maxHqHealth - hqHealth }).map((_, spotIndex) => {
-            // Create consistent spots based on health lost and cell position
-            const angle = (spotIndex * 67 + row * 13 + col * 17) % 360; // Pseudo-random but consistent angle
-            const distance = 15 + (spotIndex * 5) % 20; // Varying distance from center
-            const size = 8 + (spotIndex * 3) % 8; // Varying spot size
-            const x = Math.cos(angle * Math.PI / 180) * distance;
-            const y = Math.sin(angle * Math.PI / 180) * distance;
-            
-            return (
-              <div
-                key={`mold-${spotIndex}`}
-                className="absolute rounded-full"
-                style={{
-                  width: size,
-                  height: size,
-                  left: `calc(50% + ${x}px)`,
-                  top: `calc(50% + ${y}px)`,
-                  transform: 'translate(-50%, -50%)',
-                  background: `radial-gradient(circle, rgba(80, 60, 40, 0.8) 0%, rgba(40, 30, 20, 0.6) 50%, rgba(20, 15, 10, 0.3) 100%)`,
-                  zIndex: 1
-                }}
-              />
-            );
-          })}
           <motion.div 
             className="rounded-full flex items-center justify-center"
             initial={{ scale: 1.3 }} // Start already scaled
@@ -232,34 +207,43 @@ const BoardCell: React.FC<BoardCellProps> = ({
                   }}
                 />
                 
-                {/* 100 gray particles exploding in all directions */}
+                {/* 100 gray particles exploding in all directions from whole circle */}
                 {Array.from({ length: 100 }).map((_, i) => {
-                  const angle = (i * 360) / 100 + Math.random() * 10; // Spread particles evenly with slight randomness
-                  const distance = 30 + Math.random() * 50;
+                  const angle = (i * 360) / 100 + Math.random() * 5; // Even distribution with slight randomness
+                  const distance = 60 + Math.random() * 80; // Much farther spread
                   const size = 2 + Math.random() * 4;
                   const grayShade = 100 + Math.random() * 100; // Different shades of gray
+                  
+                  // Start from edge of circle, not center
+                  const startRadius = 20; // Start from edge of HQ base
+                  const startX = Math.cos(angle * Math.PI / 180) * startRadius;
+                  const startY = Math.sin(angle * Math.PI / 180) * startRadius;
+                  
+                  // Final position
+                  const endX = Math.cos(angle * Math.PI / 180) * distance;
+                  const endY = Math.sin(angle * Math.PI / 180) * distance;
                   
                   return (
                     <motion.div
                       key={`damage-particle-${i}`}
                       className="absolute rounded-full"
                       initial={{ 
-                        scale: 0, 
+                        scale: 1, 
                         opacity: 1,
-                        x: 0,
-                        y: 0
+                        x: startX, // Start from edge of circle
+                        y: startY
                       }}
                       animate={{ 
-                        scale: [0, 1, 0.8, 0],
+                        scale: [1, 0.8, 0.6, 0],
                         opacity: [1, 0.8, 0.4, 0],
-                        x: Math.cos(angle * Math.PI / 180) * distance,
-                        y: Math.sin(angle * Math.PI / 180) * distance
+                        x: endX,
+                        y: endY
                       }}
                       exit={{ opacity: 0 }}
                       transition={{ 
-                        duration: 1.5, 
-                        delay: i * 0.005, // Stagger the particles slightly
-                        ease: "easeOut"
+                        duration: 2.0,
+                        delay: 0, // All particles start at once
+                        ease: [0.25, 0.46, 0.45, 0.94] // Custom bezier for sin-like deceleration
                       }}
                       style={{
                         width: size,
@@ -315,34 +299,43 @@ const BoardCell: React.FC<BoardCellProps> = ({
                   }}
                 />
                 
-                {/* 100 gray particles exploding in all directions - same as damage but more intense */}
+                {/* 100 gray particles exploding in all directions from whole circle - more intense for destruction */}
                 {Array.from({ length: 100 }).map((_, i) => {
-                  const angle = (i * 360) / 100 + Math.random() * 15; // More spread for destruction
-                  const distance = 40 + Math.random() * 60; // Farther spread
+                  const angle = (i * 360) / 100 + Math.random() * 8; // Even distribution with slight randomness
+                  const distance = 80 + Math.random() * 100; // Much farther spread for destruction
                   const size = 2 + Math.random() * 5; // Slightly larger particles
                   const grayShade = 80 + Math.random() * 120; // More variety in gray shades
+                  
+                  // Start from edge of circle, not center
+                  const startRadius = 20; // Start from edge of HQ base
+                  const startX = Math.cos(angle * Math.PI / 180) * startRadius;
+                  const startY = Math.sin(angle * Math.PI / 180) * startRadius;
+                  
+                  // Final position
+                  const endX = Math.cos(angle * Math.PI / 180) * distance;
+                  const endY = Math.sin(angle * Math.PI / 180) * distance;
                   
                   return (
                     <motion.div
                       key={`destroy-particle-${i}`}
                       className="absolute rounded-full"
                       initial={{ 
-                        scale: 0, 
+                        scale: 1.2, 
                         opacity: 1,
-                        x: 0,
-                        y: 0
+                        x: startX, // Start from edge of circle
+                        y: startY
                       }}
                       animate={{ 
-                        scale: [0, 1.2, 0.9, 0],
+                        scale: [1.2, 1, 0.7, 0],
                         opacity: [1, 0.9, 0.5, 0],
-                        x: Math.cos(angle * Math.PI / 180) * distance,
-                        y: Math.sin(angle * Math.PI / 180) * distance
+                        x: endX,
+                        y: endY
                       }}
                       exit={{ opacity: 0 }}
                       transition={{ 
-                        duration: 2.0, // Longer duration for destruction
-                        delay: i * 0.003, // Faster stagger for more chaos
-                        ease: "easeOut"
+                        duration: 2.5, // Longer duration for destruction
+                        delay: 0, // All particles start at once
+                        ease: [0.25, 0.46, 0.45, 0.94] // Custom bezier for sin-like deceleration
                       }}
                       style={{
                         width: size,

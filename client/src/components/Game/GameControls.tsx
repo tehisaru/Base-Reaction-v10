@@ -53,20 +53,20 @@ const GameControls: React.FC<GameControlsProps> = ({
         transition: "background-color 0.5s ease"
       }}
     >
-      <div className="flex items-center space-x-12">
+      <div className="flex items-center space-x-10">
         <button
           onClick={onUndo}
           disabled={!canUndo}
-          className={`px-8 py-4 rounded-xl text-white text-lg font-medium transition-all duration-500 ${
+          className={`px-6 py-3 rounded-xl text-white text-base font-medium transition-all duration-500 ${
             canUndo 
               ? "hover:opacity-80" 
               : "opacity-50 cursor-not-allowed"
           }`}
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: `rgba(0, 0, 0, 0.6)`, // Dark semi-transparent
+            backgroundColor: `${PLAYER_BG_COLORS[currentPlayer]}B3`, // Same color as background with 70% opacity
             border: 'none',
-            transition: "all 0.5s ease",
+            transition: "background-color 0.5s ease, opacity 0.3s ease", // Same timing as background
             backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >
@@ -75,12 +75,12 @@ const GameControls: React.FC<GameControlsProps> = ({
 
         <button
           onClick={onRestart}
-          className="px-8 py-4 rounded-xl text-white text-lg font-medium hover:opacity-80 transition-all duration-500"
+          className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: `rgba(0, 0, 0, 0.6)`, // Dark semi-transparent
+            backgroundColor: `${PLAYER_BG_COLORS[currentPlayer]}B3`, // Same color as background with 70% opacity
             border: 'none',
-            transition: "all 0.5s ease",
+            transition: "background-color 0.5s ease, opacity 0.3s ease", // Same timing as background
             backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >
@@ -89,12 +89,12 @@ const GameControls: React.FC<GameControlsProps> = ({
 
         <button
           onClick={() => navigate("/")}
-          className="px-8 py-4 rounded-xl text-white text-lg font-medium hover:opacity-80 transition-all duration-500"
+          className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: `rgba(0, 0, 0, 0.6)`, // Dark semi-transparent
+            backgroundColor: `${PLAYER_BG_COLORS[currentPlayer]}B3`, // Same color as background with 70% opacity
             border: 'none',
-            transition: "all 0.5s ease",
+            transition: "background-color 0.5s ease, opacity 0.3s ease", // Same timing as background
             backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >

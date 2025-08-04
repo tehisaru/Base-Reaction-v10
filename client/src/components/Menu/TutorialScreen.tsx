@@ -13,7 +13,7 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
   const navigate = useNavigate();
   
   return (
-    <div className="bg-black p-4 py-8 overflow-y-auto">
+    <div className="min-h-screen bg-black p-4 py-8 overflow-y-auto">
       <h1 className="text-3xl font-bold mb-6 text-center text-white" style={typewriterFont}>
         {mode === "classic" ? "Classic Mode" : "Base Reaction Mode"} Tutorial
       </h1>
