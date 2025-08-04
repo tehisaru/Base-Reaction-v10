@@ -47,24 +47,26 @@ const GameControls: React.FC<GameControlsProps> = ({
 
   return (
     <div 
-      className="flex flex-col items-center justify-center w-full max-w-3xl p-3 mb-4"
+      className="flex flex-col items-center justify-center w-full max-w-3xl p-4 mb-6"
       style={{ 
         backgroundColor: 'transparent',
-        transition: "background-color 0.3s ease"
+        transition: "background-color 0.5s ease"
       }}
     >
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-8">
         <button
           onClick={onUndo}
           disabled={!canUndo}
-          className={`px-3 py-1 rounded-xl border-2 border-white text-white text-sm transition-all duration-300 ${
+          className={`px-6 py-3 rounded-xl text-white text-base font-medium transition-all duration-500 ${
             canUndo 
-              ? "hover:bg-gray-800" 
+              ? "hover:opacity-80" 
               : "opacity-50 cursor-not-allowed"
           }`}
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: '#000000'
+            backgroundColor: PLAYER_BG_COLORS[currentPlayer],
+            border: 'none',
+            transition: "background-color 0.5s ease, opacity 0.3s ease"
           }}
         >
           Undo
@@ -72,10 +74,12 @@ const GameControls: React.FC<GameControlsProps> = ({
 
         <button
           onClick={onRestart}
-          className="px-3 py-1 rounded-xl border-2 border-white text-white text-sm hover:bg-gray-800 transition-all duration-300"
+          className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: '#000000'
+            backgroundColor: PLAYER_BG_COLORS[currentPlayer],
+            border: 'none',
+            transition: "background-color 0.5s ease, opacity 0.3s ease"
           }}
         >
           Restart
@@ -83,10 +87,12 @@ const GameControls: React.FC<GameControlsProps> = ({
 
         <button
           onClick={() => navigate("/")}
-          className="px-3 py-1 rounded-xl border-2 border-white text-white text-sm hover:bg-gray-800 transition-all duration-300"
+          className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: '#000000'
+            backgroundColor: PLAYER_BG_COLORS[currentPlayer],
+            border: 'none',
+            transition: "background-color 0.5s ease, opacity 0.3s ease"
           }}
         >
           Menu

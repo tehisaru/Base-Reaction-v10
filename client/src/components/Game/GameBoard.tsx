@@ -153,6 +153,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   powerUpType={powerUpType}
                   isHQ={isHQ}
                   hqHealth={health}
+                  maxHqHealth={5}
                   isHQDamaged={isHQEffected && hqEffectType === 'damage'}
                   isHQHealed={isHQEffected && hqEffectType === 'heal'}
                   isHQDestroyed={isHQEffected && hqEffectType === 'destroyed'}

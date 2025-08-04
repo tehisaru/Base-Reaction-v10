@@ -12,11 +12,11 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode }) => {
   const navigate = useNavigate();
   
   return (
-    <div className="min-h-screen bg-black p-4 py-8">
+    <div className="min-h-screen bg-black p-4 py-8 overflow-y-auto">
       <h1 className="text-3xl font-bold mb-6 text-center text-white" style={typewriterFont}>
         {mode === "classic" ? "Classic Mode" : "Base Reaction Mode"} Tutorial
       </h1>
-      <div className="max-w-3xl mx-auto bg-black bg-opacity-70 text-white rounded-3xl border-2 border-white p-6 max-h-[80vh] overflow-y-auto" style={{ transition: "all 0.3s ease" }}>
+      <div className="max-w-3xl mx-auto text-white p-6" style={{ transition: "all 0.3s ease" }}>
         
         {mode === "classic" ? (
           <div className="space-y-6">
@@ -120,11 +120,11 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode }) => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="py-4 px-8 rounded-2xl text-white font-semibold bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white"
             style={typewriterFont}
           >
-            Back
+            Back to Menu
           </motion.button>
           
           <motion.button

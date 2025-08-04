@@ -250,9 +250,9 @@ const MainMenu: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4 pt-32">
-      {/* Fixed position title - larger and always visible */}
-      <div className="fixed top-8 left-0 right-0 z-10">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4 pt-20">
+      {/* Fixed position title - larger and positioned more in the middle */}
+      <div className="fixed top-20 left-0 right-0 z-10">
         <motion.h1 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

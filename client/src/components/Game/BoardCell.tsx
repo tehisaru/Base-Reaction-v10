@@ -25,6 +25,7 @@ type BoardCellProps = {
   powerUpType?: PowerUpType;
   isHQ?: boolean;
   hqHealth?: number;
+  maxHqHealth?: number; // Track max health to calculate damage spots
   isHQDamaged?: boolean; // Track if this HQ cell was just damaged
   isHQHealed?: boolean; // Track if this HQ cell was just healed
   isHQDestroyed?: boolean; // Track if this HQ cell was just destroyed
@@ -41,6 +42,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
   powerUpType,
   isHQ,
   hqHealth,
+  maxHqHealth = 5,
   isHQDamaged,
   isHQHealed,
   isHQDestroyed
@@ -100,7 +102,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
         }
       }}
     >
-      {/* Power-up icon if present - completely flat with same transition speed */}
+      {/* Power-up icon if present - completely flat with same transition speed and strong green glow */}
       {powerUpType && cell.atoms === 0 && (
         <div className="absolute inset-0 flex items-center justify-center"
           style={{ transition: "all 0.3s ease" }} // Match the background transition speed
@@ -113,7 +115,11 @@ const BoardCell: React.FC<BoardCellProps> = ({
               fill="rgb(50, 200, 50)" 
               stroke="rgb(0, 200, 0)" 
               strokeWidth="1"
-              style={{ transition: "all 0.3s ease" }} // Match the background transition speed
+              style={{ 
+                transition: "all 0.3s ease", // Match the background transition speed
+                filter: "drop-shadow(0 0 8px rgb(0, 255, 0))", // Strong green glow
+                boxShadow: "0 0 15px rgba(0, 255, 0, 0.6)" // Additional strong glow
+              }}
             >
               <path d="M12 2L2 12L12 22L22 12L12 2Z" />
             </svg>
@@ -126,7 +132,11 @@ const BoardCell: React.FC<BoardCellProps> = ({
               fill="rgb(50, 200, 50)" 
               stroke="rgb(0, 200, 0)" 
               strokeWidth="1"
-              style={{ transition: "all 0.3s ease" }} // Match the background transition speed
+              style={{ 
+                transition: "all 0.3s ease", // Match the background transition speed
+                filter: "drop-shadow(0 0 8px rgb(0, 255, 0))", // Strong green glow
+                boxShadow: "0 0 15px rgba(0, 255, 0, 0.6)" // Additional strong glow
+              }}
             >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>
@@ -141,6 +151,31 @@ const BoardCell: React.FC<BoardCellProps> = ({
             padding: '2px' // Add padding to make space for the circle
           }}
         >
+          {/* Mold/damage spots when HQ has lost health */}
+          {hqHealth < maxHqHealth && Array.from({ length: maxHqHealth - hqHealth }).map((_, spotIndex) => {
+            // Create consistent spots based on health lost and cell position
+            const angle = (spotIndex * 67 + row * 13 + col * 17) % 360; // Pseudo-random but consistent angle
+            const distance = 15 + (spotIndex * 5) % 20; // Varying distance from center
+            const size = 8 + (spotIndex * 3) % 8; // Varying spot size
+            const x = Math.cos(angle * Math.PI / 180) * distance;
+            const y = Math.sin(angle * Math.PI / 180) * distance;
+            
+            return (
+              <div
+                key={`mold-${spotIndex}`}
+                className="absolute rounded-full"
+                style={{
+                  width: size,
+                  height: size,
+                  left: `calc(50% + ${x}px)`,
+                  top: `calc(50% + ${y}px)`,
+                  transform: 'translate(-50%, -50%)',
+                  background: `radial-gradient(circle, rgba(80, 60, 40, 0.8) 0%, rgba(40, 30, 20, 0.6) 50%, rgba(20, 15, 10, 0.3) 100%)`,
+                  zIndex: 1
+                }}
+              />
+            );
+          })}
           <motion.div 
             className="rounded-full flex items-center justify-center"
             initial={{ scale: 1.3 }} // Start already scaled
@@ -352,8 +387,8 @@ const BoardCell: React.FC<BoardCellProps> = ({
                   height: DOT_SIZE,
                   backgroundColor: PLAYER_COLORS[cell.player!],
                   boxShadow: aboutToExplode 
-                    ? `0 0 8px ${PLAYER_COLORS[cell.player!]}` // Glow effect when near critical
-                    : 'none',
+                    ? `0 0 8px ${PLAYER_COLORS[cell.player!]}` // Strong glow effect when near critical
+                    : `0 0 2px ${PLAYER_COLORS[cell.player!]}`, // Very slight glow at all times
                   transform: `scale(${(cell.atoms / criticalMass) * 0.7 + 0.3})` // Shrink based on critical mass ratio (min 0.3, max 1.0)
                 }}
               />

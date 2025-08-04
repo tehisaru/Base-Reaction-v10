@@ -253,6 +253,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
       history: [], // Clear history
       hqs: hqs, // Set HQs based on player selection
       powerUps, // Empty power-ups initially
+      lastHQDamaged: undefined // Clear any previous HQ damage animations to prevent startup animations
     });
   },
 
@@ -613,6 +614,18 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                   // In base mode with multiple players, check to see if only one HQ remains
                   // Get all dead HQs
                   const deadHQs = newHqs.filter(hq => hq.health <= 0);
+                  
+                  // Clear all dots from the board for players whose HQ was destroyed
+                  deadHQs.forEach(deadHQ => {
+                    console.log(`Clearing all dots for defeated player: ${deadHQ.player}`);
+                    for (let r = 0; r < newGrid.length; r++) {
+                      for (let c = 0; c < newGrid[r].length; c++) {
+                        if (newGrid[r][c].player === deadHQ.player) {
+                          newGrid[r][c] = { atoms: 0, player: null };
+                        }
+                      }
+                    }
+                  });
                   
                   // Get active player settings using PlayerSettingsManager
                   let activePlayers = [PLAYER.RED, PLAYER.BLUE]; // Default
