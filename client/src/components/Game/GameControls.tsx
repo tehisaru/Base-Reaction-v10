@@ -64,10 +64,9 @@ const GameControls: React.FC<GameControlsProps> = ({
           }`}
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: 'rgba(60, 60, 60, 0.8)', // Consistent dark gray background
+            backgroundColor: 'rgb(40, 40, 40)', // Really dark gray with no transparency
             border: 'none',
-            transition: "opacity 0.3s ease", // Simplified transition
-            backdropFilter: 'blur(5px)' // Add blur for better visual effect
+            transition: "opacity 0.3s ease" // Simplified transition
           }}
         >
           Undo
@@ -78,10 +77,9 @@ const GameControls: React.FC<GameControlsProps> = ({
           className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: 'rgba(60, 60, 60, 0.8)', // Consistent dark gray background
+            backgroundColor: 'rgb(40, 40, 40)', // Really dark gray with no transparency
             border: 'none',
-            transition: "opacity 0.3s ease", // Simplified transition
-            backdropFilter: 'blur(5px)' // Add blur for better visual effect
+            transition: "opacity 0.3s ease" // Simplified transition
           }}
         >
           Restart
@@ -92,10 +90,9 @@ const GameControls: React.FC<GameControlsProps> = ({
           className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: 'rgba(60, 60, 60, 0.8)', // Consistent dark gray background
+            backgroundColor: 'rgb(40, 40, 40)', // Really dark gray with no transparency
             border: 'none',
-            transition: "opacity 0.3s ease", // Simplified transition
-            backdropFilter: 'blur(5px)' // Add blur for better visual effect
+            transition: "opacity 0.3s ease" // Simplified transition
           }}
         >
           Menu

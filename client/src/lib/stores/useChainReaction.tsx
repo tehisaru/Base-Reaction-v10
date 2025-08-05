@@ -102,6 +102,16 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
   // Initialize classic mode (9x7 grid - more vertical)
   initClassicMode: () => {
+    // Clear grid immediately to prevent visual glitch
+    set({
+      grid: [],
+      gameOver: false,
+      winner: null,
+      history: [],
+      hqs: [],
+      powerUps: [],
+    });
+
     const rows = 9;
     const cols = 7;
 
@@ -155,6 +165,16 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
   // Initialize base reaction mode (9x9 grid with HQs)
   initBaseMode: () => {
+    // Clear grid immediately to prevent visual glitch
+    set({
+      grid: [],
+      gameOver: false,
+      winner: null,
+      history: [],
+      hqs: [],
+      powerUps: [],
+    });
+
     const rows = 9;
     const cols = 9;
 

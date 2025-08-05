@@ -104,7 +104,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <motion.div 
-      className="flex flex-col items-center justify-center p-6 rounded-3xl"
+      className="flex flex-col items-center justify-center p-3 md:p-6 rounded-xl md:rounded-2xl scale-75 md:scale-100"
       initial="hidden"
       animate={gameStarted ? "visible" : "hidden"}
       variants={boardContainerVariants}
@@ -113,7 +113,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
         height: rows * CELL_SIZE + rows * 2 + 24,
         background: "rgba(255, 255, 255, 0.05)",
         border: "none", // Remove border for completely flat look
-        boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)" // Add constant glow to board edges
+        boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)", // Add constant glow to board edges
+        transformOrigin: 'center'
       }}
     >
       {grid.map((rowCells, rowIndex) => (

@@ -256,9 +256,9 @@ const MainMenu: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4 pt-16 md:pt-20">
-      {/* Fixed position title - responsive sizing */}
-      <div className="fixed top-12 md:top-20 left-0 right-0 z-10">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4 pt-20 md:pt-24">
+      {/* Fixed position title - responsive sizing, moved lower */}
+      <div className="fixed top-16 md:top-24 left-0 right-0 z-10">
         <motion.h1 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -482,7 +482,7 @@ const MainMenu: React.FC = () => {
       
       {/* Tutorial Content */}
       {menuScreen === 'tutorial-content' && (
-        <div className="w-full max-w-3xl mt-16"> {/* Add top margin to avoid overlaying title */}
+        <div className="w-full max-w-3xl mt-20 md:mt-24"> {/* Add more top margin to avoid overlaying title */}
           <TutorialScreen mode={tutorialMode} onBack={() => setMenuScreen('tutorial')} />
         </div>
       )}
