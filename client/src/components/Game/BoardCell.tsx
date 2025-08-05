@@ -42,9 +42,9 @@ const HQBaseComponent: React.FC<{
 }> = ({ hqHealth, maxHqHealth, playerColor, isHQDamaged, isHQHealed, isHQDestroyed }) => {
   const [isFlickering, setIsFlickering] = useState(false);
 
-  // Health-based glow calculations
-  const glowIntensity = hqHealth <= 1 ? 0 : hqHealth === 2 ? 0.3 : hqHealth === 3 ? 1 : hqHealth >= 4 ? 0.7 : 0.5;
-  const glowSize = hqHealth <= 1 ? 0 : hqHealth === 2 ? 5 : hqHealth === 3 ? 15 : 10;
+  // Health-based glow calculations - 3 health = current level, 4-5 = stronger, 2 = weaker, 1 = none
+  const glowIntensity = hqHealth <= 1 ? 0 : hqHealth === 2 ? 0.4 : hqHealth === 3 ? 1 : hqHealth === 4 ? 1.5 : 2.0;
+  const glowSize = hqHealth <= 1 ? 0 : hqHealth === 2 ? 8 : hqHealth === 3 ? 15 : hqHealth === 4 ? 25 : 35;
   
   // Flickering effect for 2 health
   useEffect(() => {
@@ -67,7 +67,7 @@ const HQBaseComponent: React.FC<{
       className="rounded-full flex items-center justify-center"
       initial={{ scale: 1.3 }}
       animate={isHQDestroyed ? {
-        scale: [1.3, 3, 0],
+        scale: [1.3, 6, 0],
         opacity: [1, 1, 0]
       } : (isHQDamaged || isHQHealed) ? {
         scale: [1.3, 1.5, 1.3],
@@ -75,7 +75,7 @@ const HQBaseComponent: React.FC<{
         scale: 1.3
       }}
       transition={{ 
-        duration: isHQDestroyed ? 1.5 : 0.5,
+        duration: isHQDestroyed ? 2.0 : 0.5,
         ease: "easeInOut"
       }}
       style={{

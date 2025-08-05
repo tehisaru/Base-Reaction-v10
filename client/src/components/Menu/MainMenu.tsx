@@ -143,19 +143,7 @@ const MainMenu: React.FC = () => {
   const [selectedMode, setSelectedMode] = useState<'classic' | 'base-reaction'>('classic');
   const [aiDifficulty, setAIDifficulty] = useState<AI_DIFFICULTY>(AI_DIFFICULTY.MEDIUM);
 
-  // Listen for custom events from tutorial to select game mode
-  useEffect(() => {
-    const handleGameModeSelection = (event: CustomEvent) => {
-      const mode = event.detail.mode;
-      setSelectedMode(mode);
-      setMenuScreen('mode');
-    };
-
-    window.addEventListener('selectGameMode', handleGameModeSelection as EventListener);
-    return () => {
-      window.removeEventListener('selectGameMode', handleGameModeSelection as EventListener);
-    };
-  }, []);
+  // No longer needed since tutorial buttons now navigate directly to game modes
   
   // Initialize number of players from existing settings
   const initialNumPlayers = (): 2 | 3 | 4 => {
