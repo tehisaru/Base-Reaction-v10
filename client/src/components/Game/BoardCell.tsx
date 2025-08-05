@@ -31,6 +31,71 @@ type BoardCellProps = {
   isHQDestroyed?: boolean; // Track if this HQ cell was just destroyed
 };
 
+// HQ Base component with health-based glow effects
+const HQBaseComponent: React.FC<{
+  hqHealth: number;
+  maxHqHealth: number;
+  playerColor: string;
+  isHQDamaged?: boolean;
+  isHQHealed?: boolean;
+  isHQDestroyed?: boolean;
+}> = ({ hqHealth, maxHqHealth, playerColor, isHQDamaged, isHQHealed, isHQDestroyed }) => {
+  const [isFlickering, setIsFlickering] = useState(false);
+
+  // Health-based glow calculations
+  const glowIntensity = hqHealth <= 1 ? 0 : hqHealth === 2 ? 0.3 : hqHealth === 3 ? 1 : hqHealth >= 4 ? 0.7 : 0.5;
+  const glowSize = hqHealth <= 1 ? 0 : hqHealth === 2 ? 5 : hqHealth === 3 ? 15 : 10;
+  
+  // Flickering effect for 2 health
+  useEffect(() => {
+    if (hqHealth === 2) {
+      const flickerInterval = setInterval(() => {
+        setIsFlickering(prev => !prev);
+      }, 200 + Math.random() * 300); // Asymmetric flickering
+      
+      return () => clearInterval(flickerInterval);
+    } else {
+      setIsFlickering(false);
+    }
+  }, [hqHealth]);
+
+  const flickerOpacity = hqHealth === 2 && isFlickering ? 0.3 : 1;
+  const baseGray = hqHealth === 1 ? 'rgb(120, 120, 120)' : playerColor;
+
+  return (
+    <motion.div 
+      className="rounded-full flex items-center justify-center"
+      initial={{ scale: 1.3 }}
+      animate={isHQDestroyed ? {
+        scale: [1.3, 3, 0],
+        opacity: [1, 1, 0]
+      } : (isHQDamaged || isHQHealed) ? {
+        scale: [1.3, 1.5, 1.3],
+      } : {
+        scale: 1.3
+      }}
+      transition={{ 
+        duration: isHQDestroyed ? 1.5 : 0.5,
+        ease: "easeInOut"
+      }}
+      style={{
+        width: '80%', 
+        height: '80%',
+        backgroundColor: baseGray,
+        transition: "all 0.1s ease",
+        boxShadow: glowIntensity > 0 ? 
+          `0 0 ${glowSize}px ${playerColor}, 0 0 ${glowSize * 2}px ${playerColor}50` : 
+          'none',
+        opacity: flickerOpacity
+      }}
+    >
+      <span className="text-xl font-bold text-white">
+        {hqHealth}
+      </span>
+    </motion.div>
+  );
+};
+
 const BoardCell: React.FC<BoardCellProps> = ({
   row,
   col,
@@ -94,7 +159,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
           : "rgba(255, 255, 255, 0.1)", // Slightly visible white background
         border: "none", // Remove border for completely flat look
         margin: "1px",
-        transition: "all 0.3s ease" // Match the background transition speed
+        transition: "all 0.1s ease" // Faster hover transition
       }}
       onClick={() => {
         if (isValidMove) {
@@ -102,11 +167,11 @@ const BoardCell: React.FC<BoardCellProps> = ({
         }
       }}
     >
-      {/* Power-up icon if present - completely flat with same transition speed and strong green glow */}
-      {powerUpType && cell.atoms === 0 && (
+      {/* Power-up icon if present - also show when there are dots */}
+      {powerUpType && (
         <div className="absolute inset-0 flex items-center justify-center"
           style={{ 
-            transition: "all 0.3s ease", // Match the background transition speed
+            transition: "all 0.1s ease", // Faster transition
             overflow: "visible", // Allow glow to extend beyond boundaries
             zIndex: 10 // Ensure glow appears on top
           }}
@@ -114,7 +179,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
           {powerUpType === 'diamond' && (
             <div style={{
               filter: "drop-shadow(0 0 12px rgb(0, 255, 0)) drop-shadow(0 0 20px rgba(0, 255, 0, 0.5))", // Strong green glow without container clipping
-              transition: "all 0.3s ease"
+              transition: "all 0.1s ease"
             }}>
               <svg 
                 width="26" 
@@ -124,7 +189,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
                 stroke="rgb(0, 200, 0)" 
                 strokeWidth="1"
                 style={{ 
-                  transition: "all 0.3s ease" // Match the background transition speed
+                  transition: "all 0.1s ease" // Faster transition
                 }}
               >
                 <path d="M12 2L2 12L12 22L22 12L12 2Z" />
@@ -134,7 +199,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
           {powerUpType === 'heart' && (
             <div style={{
               filter: "drop-shadow(0 0 12px rgb(0, 255, 0)) drop-shadow(0 0 20px rgba(0, 255, 0, 0.5))", // Strong green glow without container clipping
-              transition: "all 0.3s ease"
+              transition: "all 0.1s ease"
             }}>
               <svg 
                 width="26" 
@@ -144,7 +209,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
                 stroke="rgb(0, 200, 0)" 
                 strokeWidth="1"
                 style={{ 
-                  transition: "all 0.3s ease" // Match the background transition speed
+                  transition: "all 0.1s ease" // Faster transition
                 }}
               >
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -154,249 +219,50 @@ const BoardCell: React.FC<BoardCellProps> = ({
         </div>
       )}
 
-      {/* HQ base as a big circle - no drop shadows for flat design */}
+      {/* HQ base with health-based glow effects */}
       {isHQ && hqHealth !== undefined && (
         <div className="absolute inset-0 flex items-center justify-center"
           style={{ 
             padding: '2px' // Add padding to make space for the circle
           }}
         >
-          <motion.div 
-            className="rounded-full flex items-center justify-center"
-            initial={{ scale: 1.3 }} // Start already scaled
-            animate={(isHQDamaged || isHQHealed) ? {
-              scale: [1.3, 1.5, 1.3], // Pulse from already scaled size
-              // Removed boxShadow animation for flat design
-            } : {
-              scale: 1.3 // Keep steady size
-            }}
-            transition={{ 
-              duration: 0.5,
-              ease: "easeInOut"
-            }}
-            style={{
-              width: '80%', 
-              height: '80%',
-              backgroundColor: PLAYER_COLORS[cell.player!], // Fully opaque background
-              transition: "all 0.3s ease", // Match background transition speed
-              boxShadow: `0 0 10px ${PLAYER_COLORS[cell.player!]}` // Constant glow for HQ
-            }}
-          >
-            <span className="text-xl font-bold text-white">
-              {hqHealth}
-            </span>
-          </motion.div>
-          
-          <AnimatePresence>
-            {isHQDamaged && (
-              <>
-                {/* Electrical damage effect - black flash with cyan glow */}
-                <motion.div
-                  className="absolute inset-0 rounded-full"
-                  initial={{ scale: 1, opacity: 0 }}
-                  animate={{ 
-                    scale: [1, 1.2, 1], 
-                    opacity: [0, 1, 0],
-                    backgroundColor: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.8)', 'rgba(0, 0, 0, 0)']
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, times: [0, 0.5, 1] }}
-                  style={{
-                    boxShadow: '0 0 20px cyan, 0 0 40px cyan, 0 0 60px rgba(0, 255, 255, 0.5)',
-                    border: '2px solid cyan'
-                  }}
-                />
-                
-                {/* 100 gray particles exploding in all directions from whole circle */}
-                {Array.from({ length: 100 }).map((_, i) => {
-                  const angle = (i * 360) / 100 + Math.random() * 5; // Even distribution with slight randomness
-                  const distance = 60 + Math.random() * 80; // Much farther spread
-                  const size = 2 + Math.random() * 4;
-                  const grayShade = 100 + Math.random() * 100; // Different shades of gray
-                  
-                  // Start from edge of circle, not center
-                  const startRadius = 20; // Start from edge of HQ base
-                  const startX = Math.cos(angle * Math.PI / 180) * startRadius;
-                  const startY = Math.sin(angle * Math.PI / 180) * startRadius;
-                  
-                  // Final position
-                  const endX = Math.cos(angle * Math.PI / 180) * distance;
-                  const endY = Math.sin(angle * Math.PI / 180) * distance;
-                  
-                  return (
-                    <motion.div
-                      key={`damage-particle-${i}`}
-                      className="absolute rounded-full"
-                      initial={{ 
-                        scale: 1, 
-                        opacity: 1,
-                        x: startX, // Start from edge of circle
-                        y: startY
-                      }}
-                      animate={{ 
-                        scale: [1, 0.8, 0.6, 0],
-                        opacity: [1, 0.8, 0.4, 0],
-                        x: endX,
-                        y: endY
-                      }}
-                      exit={{ opacity: 0 }}
-                      transition={{ 
-                        duration: 2.0,
-                        delay: 0, // All particles start at once
-                        ease: [0.25, 0.46, 0.45, 0.94] // Custom bezier for sin-like deceleration
-                      }}
-                      style={{
-                        width: size,
-                        height: size,
-                        backgroundColor: `rgb(${grayShade}, ${grayShade}, ${grayShade})`,
-                        left: '50%',
-                        top: '50%'
-                      }}
-                    />
-                  );
-                })}
-              </>
-            )}
-          </AnimatePresence>
-          
-          <AnimatePresence>
-            {isHQHealed && (
-              <>
-                {/* Only keep the healing ring effect */}
-                <motion.div
-                  className="absolute inset-0 rounded-full"
-                  initial={{ scale: 0.8, opacity: 0.8 }}
-                  animate={{ scale: 1.8, opacity: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.7 }}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: `3px solid rgba(100, 255, 100, 0.8)`,
-                    boxShadow: 'none' // No shadow for flat design
-                  }}
-                />
-              </>
-            )}
-          </AnimatePresence>
-          
-          <AnimatePresence>
-            {isHQDestroyed && (
-              <>
-                {/* Same electrical destruction effect as damage but more intense */}
-                <motion.div
-                  className="absolute inset-0 rounded-full"
-                  initial={{ scale: 1, opacity: 0 }}
-                  animate={{ 
-                    scale: [1, 1.5, 1.2, 1], 
-                    opacity: [0, 1, 0.8, 0],
-                    backgroundColor: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 0.8)', 'rgba(0, 0, 0, 0)']
-                  }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.8, times: [0, 0.3, 0.7, 1] }}
-                  style={{
-                    boxShadow: '0 0 30px cyan, 0 0 60px cyan, 0 0 90px rgba(0, 255, 255, 0.7)',
-                    border: '3px solid cyan'
-                  }}
-                />
-                
-                {/* 100 gray particles exploding in all directions from whole circle - more intense for destruction */}
-                {Array.from({ length: 100 }).map((_, i) => {
-                  const angle = (i * 360) / 100 + Math.random() * 8; // Even distribution with slight randomness
-                  const distance = 80 + Math.random() * 100; // Much farther spread for destruction
-                  const size = 2 + Math.random() * 5; // Slightly larger particles
-                  const grayShade = 80 + Math.random() * 120; // More variety in gray shades
-                  
-                  // Start from edge of circle, not center
-                  const startRadius = 20; // Start from edge of HQ base
-                  const startX = Math.cos(angle * Math.PI / 180) * startRadius;
-                  const startY = Math.sin(angle * Math.PI / 180) * startRadius;
-                  
-                  // Final position
-                  const endX = Math.cos(angle * Math.PI / 180) * distance;
-                  const endY = Math.sin(angle * Math.PI / 180) * distance;
-                  
-                  return (
-                    <motion.div
-                      key={`destroy-particle-${i}`}
-                      className="absolute rounded-full"
-                      initial={{ 
-                        scale: 1.2, 
-                        opacity: 1,
-                        x: startX, // Start from edge of circle
-                        y: startY
-                      }}
-                      animate={{ 
-                        scale: [1.2, 1, 0.7, 0],
-                        opacity: [1, 0.9, 0.5, 0],
-                        x: endX,
-                        y: endY
-                      }}
-                      exit={{ opacity: 0 }}
-                      transition={{ 
-                        duration: 2.5, // Longer duration for destruction
-                        delay: 0, // All particles start at once
-                        ease: [0.25, 0.46, 0.45, 0.94] // Custom bezier for sin-like deceleration
-                      }}
-                      style={{
-                        width: size,
-                        height: size,
-                        backgroundColor: `rgb(${grayShade}, ${grayShade}, ${grayShade})`,
-                        left: '50%',
-                        top: '50%'
-                      }}
-                    />
-                  );
-                })}
-              </>
-            )}
-          </AnimatePresence>
+          <HQBaseComponent 
+            hqHealth={hqHealth}
+            maxHqHealth={maxHqHealth}
+            playerColor={PLAYER_COLORS[cell.player!]}
+            isHQDamaged={isHQDamaged}
+            isHQHealed={isHQHealed}
+            isHQDestroyed={isHQDestroyed}
+          />
         </div>
       )}
 
-      {/* Render atoms (except on HQ cells in base mode) */}
-      <AnimatePresence>
-        {cell.atoms > 0 && cell.player && !isHQ && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            {positions.map((pos, index) => (
-              <motion.div
-                key={`${row}-${col}-${index}`}
-                initial={{ 
-                  scale: 0,
-                  x: 0, // Start from center for smoother animation
-                  y: 0
-                }}
-                animate={{ 
-                  scale: 1,
-                  x: aboutToExplode ? pos.x + shakeOffsets[index]?.x || 0 : pos.x,
-                  y: aboutToExplode ? pos.y + shakeOffsets[index]?.y || 0 : pos.y
-                }}
-                exit={{ 
-                  scale: [1, 0.8, 0],
-                  x: [pos.x, pos.x * 1.5], // Move slightly outward when disappearing
-                  y: [pos.y, pos.y * 1.5]
-                }}
-                transition={{ 
-                  duration: ANIMATION_DURATION / 1000,
-                  type: aboutToExplode ? "tween" : "spring",
-                  stiffness: 300,
-                  damping: 20,
-                  repeat: 0
-                }}
-                className="absolute rounded-full"
-                style={{
-                  width: DOT_SIZE,
-                  height: DOT_SIZE,
-                  backgroundColor: PLAYER_COLORS[cell.player!],
-                  boxShadow: aboutToExplode 
-                    ? `0 0 8px ${PLAYER_COLORS[cell.player!]}` // Strong glow effect when near critical
-                    : `0 0 2px ${PLAYER_COLORS[cell.player!]}`, // Very slight glow at all times
-                  transform: `scale(${(cell.atoms / criticalMass) * 0.7 + 0.3})` // Shrink based on critical mass ratio (min 0.3, max 1.0)
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Dots with shaking animation */}
+      {!isHQ && cell.atoms > 0 && positions.map((pos, index) => (
+        <motion.div
+          key={`${row}-${col}-${index}`}
+          className="absolute rounded-full"
+          style={{
+            width: DOT_SIZE,
+            height: DOT_SIZE,
+            left: CELL_SIZE / 2 + pos.x + (aboutToExplode ? shakeOffsets[index]?.x || 0 : 0) - DOT_SIZE / 2,
+            top: CELL_SIZE / 2 + pos.y + (aboutToExplode ? shakeOffsets[index]?.y || 0 : 0) - DOT_SIZE / 2,
+            backgroundColor: PLAYER_COLORS[cell.player!],
+            boxShadow: aboutToExplode 
+              ? `0 0 8px ${PLAYER_COLORS[cell.player!]}, 0 0 16px ${PLAYER_COLORS[cell.player!]}` 
+              : `0 0 4px ${PLAYER_COLORS[cell.player!]}`,
+            border: `2px solid ${PLAYER_COLORS[cell.player!]}`,
+            transition: aboutToExplode ? "none" : "all 0.1s ease"
+          }}
+        />
+      ))}
+
+      {/* Critical mass indicator */}
+      {cell.atoms > 0 && cell.atoms === criticalMass && (
+        <div className="absolute top-1 right-1">
+          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+        </div>
+      )}
     </div>
   );
 };

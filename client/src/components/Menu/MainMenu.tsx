@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PLAYER, PLAYER_COLORS } from "../../lib/constants";
@@ -142,6 +142,20 @@ const MainMenu: React.FC = () => {
   const [tutorialMode, setTutorialMode] = useState<'classic' | 'base-reaction'>('classic');
   const [selectedMode, setSelectedMode] = useState<'classic' | 'base-reaction'>('classic');
   const [aiDifficulty, setAIDifficulty] = useState<AI_DIFFICULTY>(AI_DIFFICULTY.MEDIUM);
+
+  // Listen for custom events from tutorial to select game mode
+  useEffect(() => {
+    const handleGameModeSelection = (event: CustomEvent) => {
+      const mode = event.detail.mode;
+      setSelectedMode(mode);
+      setMenuScreen('mode');
+    };
+
+    window.addEventListener('selectGameMode', handleGameModeSelection as EventListener);
+    return () => {
+      window.removeEventListener('selectGameMode', handleGameModeSelection as EventListener);
+    };
+  }, []);
   
   // Initialize number of players from existing settings
   const initialNumPlayers = (): 2 | 3 | 4 => {

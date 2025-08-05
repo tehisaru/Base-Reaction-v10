@@ -64,7 +64,7 @@ const GameControls: React.FC<GameControlsProps> = ({
           }`}
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: 'rgb(40, 40, 40)', // Really dark gray with no transparency
+            backgroundColor: 'rgb(25, 25, 25)', // Even darker gray with no transparency
             border: 'none',
             transition: "opacity 0.3s ease" // Simplified transition
           }}
@@ -77,7 +77,7 @@ const GameControls: React.FC<GameControlsProps> = ({
           className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: 'rgb(40, 40, 40)', // Really dark gray with no transparency
+            backgroundColor: 'rgb(25, 25, 25)', // Even darker gray with no transparency
             border: 'none',
             transition: "opacity 0.3s ease" // Simplified transition
           }}
@@ -90,7 +90,7 @@ const GameControls: React.FC<GameControlsProps> = ({
           className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: 'rgb(40, 40, 40)', // Really dark gray with no transparency
+            backgroundColor: 'rgb(25, 25, 25)', // Even darker gray with no transparency
             border: 'none',
             transition: "opacity 0.3s ease" // Simplified transition
           }}

@@ -591,6 +591,16 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           }
         }
         
+        // ALSO place dots for heart power-up
+        if (newGrid[row][col].player !== currentPlayer && newGrid[row][col].player !== null) {
+          // If capturing enemy cell, replace with 1 atom
+          newGrid[row][col] = { atoms: 1, player: currentPlayer };
+        } else {
+          // Otherwise add an atom
+          newGrid[row][col].atoms += 1;
+          newGrid[row][col].player = currentPlayer;
+        }
+        
         // Remove the power-up after use
         newPowerUps.splice(powerUpIndex, 1);
       } else {
