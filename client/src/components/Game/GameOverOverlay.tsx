@@ -46,7 +46,7 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onRestart}
-            className="py-3 px-6 bg-black hover:bg-gray-800 rounded-2xl text-white font-semibold transition-all duration-300 border-2 border-white"
+            className="py-3 px-6 bg-black hover:bg-gray-800 rounded-2xl text-white transition-all duration-300 border-2 border-white"
             style={{ 
               fontFamily: 'Menlo, monospace'
             }}
@@ -58,7 +58,7 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onBackToMenu}
-            className="py-3 px-6 bg-black hover:bg-gray-800 rounded-2xl text-white font-semibold transition-all duration-300 border-2 border-white"
+            className="py-3 px-6 bg-black hover:bg-gray-800 rounded-2xl text-white transition-all duration-300 border-2 border-white"
             style={{ 
               fontFamily: 'Menlo, monospace'
             }}

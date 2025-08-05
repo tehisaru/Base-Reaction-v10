@@ -64,9 +64,9 @@ const GameControls: React.FC<GameControlsProps> = ({
           }`}
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: `${PLAYER_BG_COLORS[currentPlayer]}B3`, // Same color as background with 70% opacity
+            backgroundColor: 'rgba(60, 60, 60, 0.8)', // Consistent dark gray background
             border: 'none',
-            transition: "background-color 0.5s ease, opacity 0.3s ease", // Same timing as background
+            transition: "opacity 0.3s ease", // Simplified transition
             backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >
@@ -78,9 +78,9 @@ const GameControls: React.FC<GameControlsProps> = ({
           className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: `${PLAYER_BG_COLORS[currentPlayer]}B3`, // Same color as background with 70% opacity
+            backgroundColor: 'rgba(60, 60, 60, 0.8)', // Consistent dark gray background
             border: 'none',
-            transition: "background-color 0.5s ease, opacity 0.3s ease", // Same timing as background
+            transition: "opacity 0.3s ease", // Simplified transition
             backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >
@@ -92,9 +92,9 @@ const GameControls: React.FC<GameControlsProps> = ({
           className="px-6 py-3 rounded-xl text-white text-base font-medium hover:opacity-80 transition-all duration-500"
           style={{ 
             fontFamily: 'Menlo, monospace',
-            backgroundColor: `${PLAYER_BG_COLORS[currentPlayer]}B3`, // Same color as background with 70% opacity
+            backgroundColor: 'rgba(60, 60, 60, 0.8)', // Consistent dark gray background
             border: 'none',
-            transition: "background-color 0.5s ease, opacity 0.3s ease", // Same timing as background
+            transition: "opacity 0.3s ease", // Simplified transition
             backdropFilter: 'blur(5px)' // Add blur for better visual effect
           }}
         >

@@ -13,11 +13,11 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
   const navigate = useNavigate();
   
   return (
-    <div className="min-h-screen bg-black p-4 py-8 overflow-y-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center text-white" style={typewriterFont}>
+    <div className="min-h-screen bg-black p-4 py-8 overflow-y-auto" style={{ maxHeight: "100vh" }}>
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-white" style={typewriterFont}>
         {mode === "classic" ? "Classic Mode" : "Base Reaction Mode"} Tutorial
       </h1>
-      <div className="max-w-3xl mx-auto text-white p-6" style={{ transition: "all 0.3s ease" }}>
+      <div className="max-w-3xl mx-auto text-white p-4 md:p-6" style={{ transition: "all 0.3s ease", maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}>
         
         {mode === "classic" ? (
           <div className="space-y-6">
@@ -117,7 +117,7 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
           </div>
         )}
         
-        <div className="mt-8 flex justify-center space-x-4">
+        <div className="mt-8 flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
@@ -128,7 +128,7 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
                 navigate("/"); // Fallback to home navigation
               }
             }}
-            className="py-4 px-8 rounded-2xl text-white font-semibold bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white"
+            className="py-4 px-8 rounded-2xl text-white bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white w-full md:w-auto"
             style={typewriterFont}
           >
             Back to Menu
@@ -137,8 +137,18 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => navigate(mode === "classic" ? "/classic" : "/base-reaction")}
-            className="py-4 px-8 rounded-2xl text-white font-semibold bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white"
+            onClick={() => {
+              if (onBack) {
+                onBack(); // Go back to main menu first
+                // Then navigate to mode selection by setting the correct game mode
+                setTimeout(() => {
+                  navigate("/");
+                }, 100);
+              } else {
+                navigate("/"); // Navigate to main menu for mode selection
+              }
+            }}
+            className="py-4 px-8 rounded-2xl text-white bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white w-full md:w-auto"
             style={typewriterFont}
           >
             Play {mode === "classic" ? "Classic" : "Base Reaction"}

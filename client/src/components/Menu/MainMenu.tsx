@@ -256,14 +256,14 @@ const MainMenu: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4 pt-20">
-      {/* Fixed position title - larger and positioned more in the middle */}
-      <div className="fixed top-20 left-0 right-0 z-10">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-4 pt-16 md:pt-20">
+      {/* Fixed position title - responsive sizing */}
+      <div className="fixed top-12 md:top-20 left-0 right-0 z-10">
         <motion.h1 
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="text-6xl font-bold text-center text-white mb-4" 
+          className="text-3xl md:text-6xl font-bold text-center text-white mb-4" 
           style={{ fontFamily: 'Menlo, monospace' }}
         >
           Base Reaction
@@ -276,7 +276,7 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 w-80"
+          className="bg-black p-6 md:p-8 w-full max-w-sm md:w-80"
         >
           <div className="grid grid-cols-1 gap-4 w-full">
             <motion.button
@@ -286,6 +286,7 @@ const MainMenu: React.FC = () => {
               onClick={() => {
                 setSelectedMode('classic');
                 setMenuScreen('mode');
+                
               }}
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
@@ -327,7 +328,7 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 w-80"
+          className="bg-black p-6 md:p-8 w-full max-w-sm md:w-80"
         >
           <h2 className="text-xl font-bold mb-4 text-center" style={{ fontFamily: 'Menlo, monospace' }}>
             {selectedMode === 'classic' ? 'Classic Mode' : 'Base Reaction Mode'}

@@ -373,8 +373,11 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
       // RULE 6: Check if adjacent to HQ (including diagonal)
       // This allows for expanding immediately around your own HQ
+      // Ensure we exclude the HQ cell itself more precisely
       const isAdjacentToHQ = (
-        Math.abs(ownHQ.row - row) <= 1 && Math.abs(ownHQ.col - col) <= 1
+        Math.abs(ownHQ.row - row) <= 1 && 
+        Math.abs(ownHQ.col - col) <= 1 && 
+        !(ownHQ.row === row && ownHQ.col === col) // Explicitly exclude HQ cell itself
       );
 
       // Debug logging for all players

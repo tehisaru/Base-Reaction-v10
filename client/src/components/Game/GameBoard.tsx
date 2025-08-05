@@ -104,7 +104,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <motion.div 
-      className="flex flex-col items-center justify-center p-6 rounded-lg"
+      className="flex flex-col items-center justify-center p-6 rounded-3xl"
       initial="hidden"
       animate={gameStarted ? "visible" : "hidden"}
       variants={boardContainerVariants}
