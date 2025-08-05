@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PLAYER, PLAYER_COLORS } from "../../lib/constants";
@@ -142,8 +142,6 @@ const MainMenu: React.FC = () => {
   const [tutorialMode, setTutorialMode] = useState<'classic' | 'base-reaction'>('classic');
   const [selectedMode, setSelectedMode] = useState<'classic' | 'base-reaction'>('classic');
   const [aiDifficulty, setAIDifficulty] = useState<AI_DIFFICULTY>(AI_DIFFICULTY.MEDIUM);
-
-  // No longer needed since tutorial buttons now navigate directly to game modes
   
   // Initialize number of players from existing settings
   const initialNumPlayers = (): 2 | 3 | 4 => {

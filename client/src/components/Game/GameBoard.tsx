@@ -104,13 +104,13 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <motion.div 
-      className="flex flex-col items-center justify-center p-2 md:p-6 rounded md:rounded scale-40 sm:scale-50 md:scale-80 lg:scale-100"
+      className="flex flex-col items-center justify-center p-3 md:p-6 rounded-xl md:rounded-2xl scale-75 md:scale-100"
       initial="hidden"
       animate={gameStarted ? "visible" : "hidden"}
       variants={boardContainerVariants}
       style={{ 
-        width: cols * CELL_SIZE + cols * 2 + 16, // Account for borders and padding
-        height: rows * CELL_SIZE + rows * 2 + 16,
+        width: cols * CELL_SIZE + cols * 2 + 24, // Account for borders and padding
+        height: rows * CELL_SIZE + rows * 2 + 24,
         background: "rgba(255, 255, 255, 0.05)",
         border: "none", // Remove border for completely flat look
         boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)", // Add constant glow to board edges

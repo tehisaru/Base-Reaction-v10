@@ -138,11 +138,14 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
-              // Navigate directly to game mode selection
-              if (mode === "classic") {
-                navigate("/classic");
+              if (onBack) {
+                onBack(); // Go back to main menu first
+                // Then navigate to mode selection by setting the correct game mode
+                setTimeout(() => {
+                  navigate("/");
+                }, 100);
               } else {
-                navigate("/base-reaction");
+                navigate("/"); // Navigate to main menu for mode selection
               }
             }}
             className="py-4 px-8 rounded-2xl text-white bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white w-full md:w-auto"
