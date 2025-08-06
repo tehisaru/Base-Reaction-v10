@@ -102,7 +102,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
         boxShadow: isHQ && hqHealth !== undefined && hqHealth > 0
           ? isHeartTarget 
             ? `0 0 30px #ff0000, 0 0 50px #ff0000` // Strong red glow for heart targets
-            : `0 0 ${Math.max(5, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}${Math.floor(hqHealth / 5 * 255).toString(16).padStart(2, '0')}` // Normal glow based on health
+            : `0 0 ${Math.max(5, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}${Math.floor((hqHealth / maxHqHealth) * 255).toString(16).padStart(2, '0')}` // Normal glow based on health
           : "none",
         border: "none", // Remove border for completely flat look
         margin: "1px",

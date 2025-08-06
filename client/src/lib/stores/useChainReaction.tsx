@@ -542,8 +542,8 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                 powerUps: newPowerUps
               }));
               
-              // Don't continue turn - wait for target selection
-              return;
+              // Don't continue with normal flow - return early to wait for target selection
+              return state;
             } else if (ownHQ && ownHQ.health < 5) {
               // Add health to own HQ if less than 5
               console.log("Heart power-up in 3+ player game: just adding health to own HQ");
@@ -1192,17 +1192,18 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         if (existingTypes.includes('diamond') && existingTypes.includes('heart')) {
           // Both types exist, don't spawn any more
           console.log("Both power-up types already exist, skipping spawn");
-          return;
-        } else if (existingTypes.includes('diamond')) {
-          // Diamond exists, only spawn heart
-          powerUpType = 'heart';
-        } else if (existingTypes.includes('heart')) {
-          // Heart exists, only spawn diamond
-          powerUpType = 'diamond';
+          // Skip power-up generation
         } else {
-          // No power-ups exist, 50% chance of either
-          powerUpType = Math.random() < 0.5 ? 'diamond' : 'heart';
-        }
+          if (existingTypes.includes('diamond')) {
+            // Diamond exists, only spawn heart
+            powerUpType = 'heart';
+          } else if (existingTypes.includes('heart')) {
+            // Heart exists, only spawn diamond
+            powerUpType = 'diamond';
+          } else {
+            // No power-ups exist, 50% chance of either
+            powerUpType = Math.random() < 0.5 ? 'diamond' : 'heart';
+          }
         
         // Find a valid position for the power-up
         let attempts = 0;
@@ -1273,6 +1274,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           
           attempts++;
         }
+        }
       }
 
       return {
@@ -1333,16 +1335,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           }
         };
 
-        // Continue with normal turn progression
-        const { checkWinCondition, nextPlayer } = get();
-        
-        // Check for win condition
-        checkWinCondition(newState.hqs);
-        
-        // Move to next player if game isn't over
-        if (!newState.gameOver) {
-          newState.currentPlayer = nextPlayer(state.currentPlayer);
-        }
+        // Continue with normal turn progression - we'll handle win condition checking in the component
 
         return newState;
       }

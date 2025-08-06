@@ -208,13 +208,9 @@ const MainMenu: React.FC = () => {
     navigate(`/${selectedMode}`);
   };
   
-  // Toggle player control between human and AI (disabled in multiplayer mode)
+  // Toggle player control between human and AI (now enabled in multiplayer mode)
   const togglePlayerControl = (player: PLAYER) => {
-    // In multiplayer mode, all players must be human - no AI allowed
-    if (menuScreen === 'multiplayer') {
-      console.log('AI players are not allowed in multiplayer mode');
-      return;
-    }
+    console.log('Toggling player control for:', player);
     
     const updatedConfigs = [...playerConfigs];
     const playerIndex = updatedConfigs.findIndex(config => config.player === player);
@@ -285,8 +281,7 @@ const MainMenu: React.FC = () => {
               transition={{ duration: 0.1 }}
               onClick={() => {
                 setSelectedMode('classic');
-                setMenuScreen('mode');
-                
+                setMenuScreen('multiplayer');
               }}
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
@@ -300,7 +295,7 @@ const MainMenu: React.FC = () => {
               transition={{ duration: 0.1 }}
               onClick={() => {
                 setSelectedMode('base-reaction');
-                setMenuScreen('mode');
+                setMenuScreen('multiplayer');
               }}
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
@@ -522,13 +517,34 @@ const MainMenu: React.FC = () => {
             <h3 className="text-lg font-semibold mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
             <div className="flex justify-center gap-4">
               {playerConfigs.map((config) => (
-                <div 
+                <motion.div 
                   key={config.player} 
-                  className={`w-12 h-12 rounded-full ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
+                  className={`w-16 h-16 rounded-full cursor-pointer relative ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
                   style={{ 
                     backgroundColor: PLAYER_COLORS[config.player]
                   }}
-                />
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => togglePlayerControl(config.player)}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {config.control === PLAYER_CONTROL.HUMAN ? (
+                      <img 
+                        src="/icons/human-icon.svg" 
+                        alt="Human" 
+                        className="w-8 h-8"
+                        style={{ filter: 'invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}
+                      />
+                    ) : (
+                      <img 
+                        src="/icons/robot-icon.svg" 
+                        alt="AI" 
+                        className="w-8 h-8"
+                        style={{ filter: 'invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}
+                      />
+                    )}
+                  </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -549,7 +565,7 @@ const MainMenu: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.1 }}
-              onClick={() => setMenuScreen('mode')}
+              onClick={() => setMenuScreen('main')}
               className={`${buttonStyle.back}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
