@@ -20,98 +20,59 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
       <div className="max-w-3xl mx-auto text-white p-4 md:p-6" style={{ transition: "all 0.3s ease" }}>
         
         {mode === "classic" ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <section>
-              <h2 className="text-xl font-semibold mb-2" style={typewriterFont}>Goal</h2>
-              <p style={typewriterFont}>Be the only player with dots on the board.</p>
-            </section>
-          
-            
-            <section>
-              <h2 className="text-xl font-semibold mb-2" style={typewriterFont}>Turn Structure</h2>
-              <ul className="list-disc pl-6 space-y-2" style={typewriterFont}>
-                <li>Players can only place dots in empty cells or cells containing their color.</li>
-                <li>Each cell has a "critical mass" that causes explosion when reached:
-                  <ul className="list-circle pl-6 mt-1">
-                    <li>Corner cells: 2 dots</li>
-                    <li>Edge cells: 3 dots</li>
-                    <li>Center cells: 4 dots</li>
-                  </ul>
-                </li>
+              <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>How to Play</h2>
+              <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
+                <li>Click empty cells or your own colored cells to add dots</li>
+                <li>When cells get too full, they explode and spread to neighbors</li>
+                <li>Win by being the only player with dots remaining</li>
               </ul>
             </section>
             
             <section>
-              <h2 className="text-xl font-semibold mb-2" style={typewriterFont}>AI Players</h2>
-              <p style={typewriterFont}>You can play against AI opponents with different difficulty levels:</p>
-              <ul className="list-disc pl-6 space-y-2" style={typewriterFont}>
-                <li><strong>Easy:</strong> Makes more random moves with occasional strategy</li>
-                <li><strong>Medium:</strong> More balanced decision making with some strategic play</li>
-                <li><strong>Hard:</strong> Makes highly strategic moves and targets weak points</li>
+              <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>Critical Mass (When Cells Explode)</h2>
+              <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
+                <li><strong>Corner cells:</strong> 2 dots → explode</li>
+                <li><strong>Edge cells:</strong> 3 dots → explode</li>
+                <li><strong>Center cells:</strong> 4 dots → explode</li>
               </ul>
-              <p className="mt-2" style={typewriterFont}>Configure AI opponents in the game setup screen before starting a game.</p>
             </section>
             
             <section>
-              <h2 className="text-xl font-semibold mb-2" style={typewriterFont}>Controls</h2>
-              <ul className="list-disc pl-6 space-y-2" style={typewriterFont}>
-                <li>Click on a valid cell to place a dot</li>
-                <li>Press 'R' to restart the game</li>
-                <li>Click "Undo" or press Ctrl+Z to undo your last move</li>
+              <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>Key Strategy</h2>
+              <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
+                <li>Corners explode fastest - use them for quick attacks</li>
+                <li>Watch for chain reactions that can clear the board</li>
+                <li>Sometimes building up your position is better than attacking</li>
               </ul>
             </section>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <section>
-              <h2 className="text-xl font-semibold mb-2" style={typewriterFont}>Goal</h2>
-              <p style={typewriterFont}>Reduce the enemy's HQ health to zero.</p>
-            </section>
-            
-            <section>
-              <h2 className="text-xl font-semibold mb-2" style={typewriterFont}>Turn Structure</h2>
-              <ul className="list-disc pl-6 space-y-2" style={typewriterFont}>
-                <li>Players can only place dots:
-                  <ul className="list-circle pl-6 mt-1">
-                    <li>Along their HQ side (column for left/right bases, row for top/bottom bases)</li>
-                    <li>Adjacent to their HQ (orthogonal or diagonal)</li>
-                    <li>Adjacent to their existing dots (orthogonal or diagonal)</li>
-                  </ul>
-                </li>
-                <li>Critical mass mechanics are the same as Classic mode.</li>
-                <li>Exploding next to an enemy HQ damages it.</li>
+              <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>How to Play</h2>
+              <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
+                <li>Destroy enemy headquarters by reducing their health to zero</li>
+                <li>You can only place dots near your HQ or next to your existing dots</li>
+                <li>Exploding next to enemy HQs damages them</li>
               </ul>
             </section>
             
             <section>
-              <h2 className="text-xl font-semibold mb-2" style={typewriterFont}>Power-ups</h2>
-              <h3 className="text-lg font-semibold mb-1" style={typewriterFont}>In 2-Player Games</h3>
-              <ul className="list-disc pl-6 space-y-2 mb-3" style={typewriterFont}>
-                <li>
-                  <strong>Diamond:</strong> When a player places a dot on a diamond, each cell in that row gets one dot of the player's color added (only applies to empty cells or cells with the player's color).
-                </li>
-                <li>
-                  <strong>Heart:</strong> If the player's HQ has less than 5 lives, add one life. Otherwise, take one life from the enemy HQ.
-                </li>
-              </ul>
-              
-              <h3 className="text-lg font-semibold mb-1" style={typewriterFont}>In 3-4 Player Games</h3>
-              <ul className="list-disc pl-6 space-y-2" style={typewriterFont}>
-                <li>
-                  <strong>Diamond:</strong> When a player places a dot on a diamond, a 3×3 grid of cells centered on the diamond gets one dot of the player's color added to each cell (only applies to empty cells or cells with the player's color).
-                </li>
-                <li>
-                  <strong>Heart:</strong> The player's HQ gains one life (up to a maximum of 5). In 3-4 player games, hearts never damage enemy HQs.
-                </li>
+              <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>HQ Bases</h2>
+              <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
+                <li>Each player starts with an HQ that has 5 health</li>
+                <li>HQs glow brighter when healthy, dimmer when damaged</li>
+                <li>Protect your HQ while attacking enemy HQs</li>
               </ul>
             </section>
-          
+            
             <section>
-              <h2 className="text-xl font-semibold mb-2" style={typewriterFont}>Controls</h2>
-              <ul className="list-disc pl-6 space-y-2" style={typewriterFont}>
-                <li>Click on a valid cell to place a dot</li>
-                <li>Press 'R' to restart the game</li>
-                <li>Click "Undo" or press Ctrl+Z to undo your last move</li>
+              <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>Power-ups</h2>
+              <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
+                <li><strong>Heart (♥):</strong> Heal your HQ or damage an enemy HQ</li>
+                <li><strong>Diamond (♦):</strong> Spreads your dots to nearby empty cells</li>
               </ul>
             </section>
           </div>

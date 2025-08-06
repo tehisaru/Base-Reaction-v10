@@ -488,7 +488,7 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 w-80"
+          className="bg-black p-8 w-[90%] max-w-lg"
         >
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-3" style={{ fontFamily: 'Menlo, monospace' }}>Number of Players</h3>
@@ -530,17 +530,15 @@ const MainMenu: React.FC = () => {
                   <div className="absolute inset-0 flex items-center justify-center">
                     {config.control === PLAYER_CONTROL.HUMAN ? (
                       <img 
-                        src="/icons/human-icon.svg" 
+                        src="/icons/human_icon.png" 
                         alt="Human" 
                         className="w-8 h-8"
-                        style={{ filter: 'invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}
                       />
                     ) : (
                       <img 
-                        src="/icons/robot-icon.svg" 
+                        src="/icons/AI_icon.png" 
                         alt="AI" 
                         className="w-8 h-8"
-                        style={{ filter: 'invert(1) drop-shadow(0 0 2px rgba(0,0,0,0.8))' }}
                       />
                     )}
                   </div>
