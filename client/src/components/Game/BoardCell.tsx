@@ -29,6 +29,8 @@ type BoardCellProps = {
   isHQDamaged?: boolean; // Track if this HQ cell was just damaged
   isHQHealed?: boolean; // Track if this HQ cell was just healed
   isHQDestroyed?: boolean; // Track if this HQ cell was just destroyed
+  heartSelectionMode?: boolean; // Track if we're in heart selection mode
+  pendingHeartPlayer?: string; // Track which player triggered the heart
 };
 
 const BoardCell: React.FC<BoardCellProps> = ({
@@ -45,11 +47,16 @@ const BoardCell: React.FC<BoardCellProps> = ({
   maxHqHealth = 5,
   isHQDamaged,
   isHQHealed,
-  isHQDestroyed
+  isHQDestroyed,
+  heartSelectionMode = false,
+  pendingHeartPlayer
 }) => {
   const criticalMass = calculateCriticalMass(row, col, totalRows, totalCols);
   const aboutToExplode = isAboutToExplode(cell, row, col, totalRows, totalCols);
   const cellRef = useRef<HTMLDivElement>(null);
+
+  // Check if this HQ is a valid heart target
+  const isHeartTarget = heartSelectionMode && isHQ && cell.player !== pendingHeartPlayer && cell.player !== null;
 
   // Get position of dots in the cell
   const positions = getDotPositions(cell.atoms, CELL_SIZE, DOT_SIZE);
@@ -88,16 +95,21 @@ const BoardCell: React.FC<BoardCellProps> = ({
       style={{
         width: CELL_SIZE,
         height: CELL_SIZE,
-        cursor: isValidMove ? "pointer" : "not-allowed",
+        cursor: (isValidMove || isHeartTarget) ? "pointer" : "not-allowed",
         backgroundColor: isHQ 
           ? `${PLAYER_COLORS[cell.player!]}66` // 40% opacity of player color for HQ
           : "rgba(255, 255, 255, 0.1)", // Slightly visible white background
+        boxShadow: isHQ && hqHealth !== undefined && hqHealth > 0
+          ? isHeartTarget 
+            ? `0 0 30px #ff0000, 0 0 50px #ff0000` // Strong red glow for heart targets
+            : `0 0 ${Math.max(5, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}${Math.floor(hqHealth / 5 * 255).toString(16).padStart(2, '0')}` // Normal glow based on health
+          : "none",
         border: "none", // Remove border for completely flat look
         margin: "1px",
         transition: "all 0.3s ease" // Match the background transition speed
       }}
       onClick={() => {
-        if (isValidMove) {
+        if (isValidMove || isHeartTarget) {
           onCellClick(row, col);
         }
       }}
@@ -154,8 +166,8 @@ const BoardCell: React.FC<BoardCellProps> = ({
         </div>
       )}
 
-      {/* HQ base as a big circle - no drop shadows for flat design */}
-      {isHQ && hqHealth !== undefined && (
+      {/* HQ base as a big circle - no drop shadows for flat design - only show if health > 0 */}
+      {isHQ && hqHealth !== undefined && hqHealth > 0 && (
         <div className="absolute inset-0 flex items-center justify-center"
           style={{ 
             padding: '2px' // Add padding to make space for the circle
@@ -178,8 +190,8 @@ const BoardCell: React.FC<BoardCellProps> = ({
               width: '80%', 
               height: '80%',
               backgroundColor: PLAYER_COLORS[cell.player!], // Fully opaque background
-              transition: "all 0.3s ease", // Match background transition speed
-              boxShadow: `0 0 10px ${PLAYER_COLORS[cell.player!]}` // Constant glow for HQ
+              transition: "all 0.8s ease", // Match background transition speed
+              boxShadow: `0 0 ${Math.max(5, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}${Math.floor(hqHealth / 5 * 255).toString(16).padStart(2, '0')}` // Glow based on health
             }}
           >
             <span className="text-xl font-bold text-white">
@@ -188,18 +200,18 @@ const BoardCell: React.FC<BoardCellProps> = ({
           </motion.div>
           
           <AnimatePresence>
-            {isHQDamaged && (
+            {isHQDamaged &&(
               <>
                 {/* Electrical damage effect - black flash with cyan glow */}
                 <motion.div
                   className="absolute inset-0 rounded-full"
                   initial={{ scale: 1, opacity: 0 }}
                   animate={{ 
-                    scale: [1, 1.2, 1], 
+                    scale: [1.7, 1.1, 1], 
                     opacity: [0, 1, 0],
-                    backgroundColor: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.8)', 'rgba(0, 0, 0, 0)']
+                    backgroundColor: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.9)', 'rgba(0, 0, 0, 0)']
                   }}
-                  exit={{ opacity: 0 }}
+                  exit={{ opacity: 1 }}
                   transition={{ duration: 0.3, times: [0, 0.5, 1] }}
                   style={{
                     boxShadow: '0 0 20px cyan, 0 0 40px cyan, 0 0 60px rgba(0, 255, 255, 0.5)',
@@ -210,12 +222,12 @@ const BoardCell: React.FC<BoardCellProps> = ({
                 {/* 100 gray particles exploding in all directions from whole circle */}
                 {Array.from({ length: 100 }).map((_, i) => {
                   const angle = (i * 360) / 100 + Math.random() * 5; // Even distribution with slight randomness
-                  const distance = 60 + Math.random() * 80; // Much farther spread
-                  const size = 2 + Math.random() * 4;
+                  const distance = 50 + Math.random() * 110; // Much farther spread
+                  const size = 2 + Math.random() * 6;
                   const grayShade = 100 + Math.random() * 100; // Different shades of gray
                   
                   // Start from edge of circle, not center
-                  const startRadius = 20; // Start from edge of HQ base
+                  const startRadius = 30; // Start from edge of HQ base
                   const startX = Math.cos(angle * Math.PI / 180) * startRadius;
                   const startY = Math.sin(angle * Math.PI / 180) * startRadius;
                   
@@ -239,11 +251,11 @@ const BoardCell: React.FC<BoardCellProps> = ({
                         x: endX,
                         y: endY
                       }}
-                      exit={{ opacity: 0 }}
+                      exit={{ opacity: 1 }}
                       transition={{ 
-                        duration: 2.0,
+                        duration: 1.5,
                         delay: 0, // All particles start at once
-                        ease: [0.25, 0.46, 0.45, 0.94] // Custom bezier for sin-like deceleration
+                        ease: [0.15, 0.46, 0.45, 0.94] // Custom bezier for sin-like deceleration
                       }}
                       style={{
                         width: size,
@@ -280,75 +292,75 @@ const BoardCell: React.FC<BoardCellProps> = ({
           </AnimatePresence>
           
           <AnimatePresence>
-            {isHQDestroyed && (
-              <>
-                {/* Same electrical destruction effect as damage but more intense */}
+            {isHQDestroyed &&(
+          <>
+            {/* Electrical damage effect - black flash with cyan glow */}
+            <motion.div
+              className="absolute inset-0 rounded-full"
+              initial={{ scale: 1, opacity: 0 }}
+              animate={{ 
+                scale: [1.7, 1.1, 1], 
+                opacity: [0, 1, 0],
+                backgroundColor: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.9)', 'rgba(0, 0, 0, 0)']
+              }}
+              exit={{ opacity: 1 }}
+              transition={{ duration: 0.3, times: [0, 0.5, 1] }}
+              style={{
+                boxShadow: '0 0 20px cyan, 0 0 40px cyan, 0 0 60px rgba(0, 255, 255, 0.5)',
+                border: '2px solid cyan'
+              }}
+            />
+
+            {/* 100 gray particles exploding in all directions from whole circle */}
+            {Array.from({ length: 200 }).map((_, i) => {
+              const angle = (i * 360) / 100 + Math.random() * 5; // Even distribution with slight randomness
+              const distance = 50 + Math.random() * 210; // Much farther spread
+              const size = 2 + Math.random() * 7;
+              const grayShade = 100 + Math.random() * 100; // Different shades of gray
+
+              // Start from edge of circle, not center
+              const startRadius = 30; // Start from edge of HQ base
+              const startX = Math.cos(angle * Math.PI / 180) * startRadius;
+              const startY = Math.sin(angle * Math.PI / 180) * startRadius;
+
+              // Final position
+              const endX = Math.cos(angle * Math.PI / 180) * distance;
+              const endY = Math.sin(angle * Math.PI / 180) * distance;
+
+              return (
                 <motion.div
-                  className="absolute inset-0 rounded-full"
-                  initial={{ scale: 1, opacity: 0 }}
-                  animate={{ 
-                    scale: [1, 1.5, 1.2, 1], 
-                    opacity: [0, 1, 0.8, 0],
-                    backgroundColor: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 1)', 'rgba(0, 0, 0, 0.8)', 'rgba(0, 0, 0, 0)']
+                  key={`damage-particle-${i}`}
+                  className="absolute rounded-full"
+                  initial={{ 
+                    scale: 1, 
+                    opacity: 1,
+                    x: startX, // Start from edge of circle
+                    y: startY
                   }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.8, times: [0, 0.3, 0.7, 1] }}
+                  animate={{ 
+                    scale: [1, 0.8, 0.6, 0],
+                    opacity: [1, 0.8, 0.4, 0],
+                    x: endX,
+                    y: endY
+                  }}
+                  exit={{ opacity: 1 }}
+                  transition={{ 
+                    duration: 1.5,
+                    delay: 0, // All particles start at once
+                    ease: [0.15, 0.46, 0.45, 0.94] // Custom bezier for sin-like deceleration
+                  }}
                   style={{
-                    boxShadow: '0 0 30px cyan, 0 0 60px cyan, 0 0 90px rgba(0, 255, 255, 0.7)',
-                    border: '3px solid cyan'
+                    width: size,
+                    height: size,
+                    backgroundColor: `rgb(${grayShade}, ${grayShade}, ${grayShade})`,
+                    left: '50%',
+                    top: '50%'
                   }}
                 />
-                
-                {/* 100 gray particles exploding in all directions from whole circle - more intense for destruction */}
-                {Array.from({ length: 100 }).map((_, i) => {
-                  const angle = (i * 360) / 100 + Math.random() * 8; // Even distribution with slight randomness
-                  const distance = 80 + Math.random() * 100; // Much farther spread for destruction
-                  const size = 2 + Math.random() * 5; // Slightly larger particles
-                  const grayShade = 80 + Math.random() * 120; // More variety in gray shades
-                  
-                  // Start from edge of circle, not center
-                  const startRadius = 20; // Start from edge of HQ base
-                  const startX = Math.cos(angle * Math.PI / 180) * startRadius;
-                  const startY = Math.sin(angle * Math.PI / 180) * startRadius;
-                  
-                  // Final position
-                  const endX = Math.cos(angle * Math.PI / 180) * distance;
-                  const endY = Math.sin(angle * Math.PI / 180) * distance;
-                  
-                  return (
-                    <motion.div
-                      key={`destroy-particle-${i}`}
-                      className="absolute rounded-full"
-                      initial={{ 
-                        scale: 1.2, 
-                        opacity: 1,
-                        x: startX, // Start from edge of circle
-                        y: startY
-                      }}
-                      animate={{ 
-                        scale: [1.2, 1, 0.7, 0],
-                        opacity: [1, 0.9, 0.5, 0],
-                        x: endX,
-                        y: endY
-                      }}
-                      exit={{ opacity: 0 }}
-                      transition={{ 
-                        duration: 2.5, // Longer duration for destruction
-                        delay: 0, // All particles start at once
-                        ease: [0.25, 0.46, 0.45, 0.94] // Custom bezier for sin-like deceleration
-                      }}
-                      style={{
-                        width: size,
-                        height: size,
-                        backgroundColor: `rgb(${grayShade}, ${grayShade}, ${grayShade})`,
-                        left: '50%',
-                        top: '50%'
-                      }}
-                    />
-                  );
-                })}
-              </>
-            )}
+              );
+            })}
+          </>
+          )}
           </AnimatePresence>
         </div>
       )}

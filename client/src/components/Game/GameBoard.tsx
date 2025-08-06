@@ -34,7 +34,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const [lastClickedCell, setLastClickedCell] = useState<{row: number, col: number} | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
   const { playHit } = useAudio();
-  const { lastHQDamaged } = useChainReaction();
+  const { lastHQDamaged, heartSelectionMode, selectHeartTarget, pendingHeartPlayer } = useChainReaction();
   
   // Trigger entrance animation immediately when the component mounts
   useEffect(() => {
@@ -44,6 +44,21 @@ const GameBoard: React.FC<GameBoardProps> = ({
   
   // Handle cell click with animation tracking
   const handleCellClick = (row: number, col: number) => {
+    // Check if we're in heart selection mode
+    if (heartSelectionMode) {
+      // Look for HQ at this position
+      const targetHQ = hqs.find(hq => hq.row === row && hq.col === col);
+      if (targetHQ && targetHQ.player !== pendingHeartPlayer) {
+        // Valid target - execute heart target selection
+        console.log(`Heart target selected: ${targetHQ.player}`);
+        selectHeartTarget(targetHQ.player);
+        return;
+      } else {
+        console.log("Invalid heart target selection");
+        return;
+      }
+    }
+    
     // REMOVED animation check to allow dot placement at any time
     
     // Play sound effect
@@ -103,20 +118,32 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <motion.div 
-      className="flex flex-col items-center justify-center p-3 md:p-6 rounded-xl md:rounded-2xl scale-75 md:scale-100"
-      initial="hidden"
-      animate={gameStarted ? "visible" : "hidden"}
-      variants={boardContainerVariants}
-      style={{ 
-        width: cols * CELL_SIZE + cols * 2 + 24, // Account for borders and padding
-        height: rows * CELL_SIZE + rows * 2 + 24,
-        background: "rgba(255, 255, 255, 0.05)",
-        border: "none", // Remove border for completely flat look
-        boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)", // Add constant glow to board edges
-        transformOrigin: 'center'
-      }}
-    >
+    <div className="flex flex-col items-center">
+      {/* Heart selection message */}
+      {heartSelectionMode && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 px-4 py-2 bg-red-600 text-white rounded-lg text-center font-semibold"
+        >
+          Click on an enemy base to damage it!
+        </motion.div>
+      )}
+      
+      <motion.div 
+        className="flex flex-col items-center justify-center p-3 md:p-6 rounded-xl md:rounded-2xl scale-75 md:scale-100"
+        initial="hidden"
+        animate={gameStarted ? "visible" : "hidden"}
+        variants={boardContainerVariants}
+        style={{ 
+          width: cols * CELL_SIZE + cols * 2 + 24, // Account for borders and padding
+          height: rows * CELL_SIZE + rows * 2 + 24,
+          background: "rgba(255, 255, 255, 0.05)",
+          border: "none", // Remove border for completely flat look
+          boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)", // Add constant glow to board edges
+          transformOrigin: 'center'
+        }}
+      >
       {grid.map((rowCells, rowIndex) => (
         <div key={`row-${rowIndex}`} className="flex">
           {rowCells.map((cell, colIndex) => {
@@ -158,13 +185,16 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   isHQDamaged={isHQEffected && hqEffectType === 'damage'}
                   isHQHealed={isHQEffected && hqEffectType === 'heal'}
                   isHQDestroyed={isHQEffected && hqEffectType === 'destroyed'}
+                  heartSelectionMode={heartSelectionMode}
+                  pendingHeartPlayer={pendingHeartPlayer}
                 />
               </motion.div>
             );
           })}
         </div>
       ))}
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

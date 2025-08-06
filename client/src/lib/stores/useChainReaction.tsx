@@ -63,6 +63,11 @@ interface ChainReactionState {
   hqs: HQCell[];
   powerUps: PowerUpCell[];
 
+  // Heart power-up target selection state
+  heartSelectionMode: boolean;
+  setHeartSelectionMode: (enabled: boolean) => void;
+  pendingHeartPlayer?: PLAYER; // Player who triggered the heart power-up
+
   // History for undo
   history: GameHistory[];
 
@@ -73,6 +78,7 @@ interface ChainReactionState {
   undo: () => void;
   restart: () => void;
   isValidMove: (row: number, col: number) => boolean; // This is explicitly a boolean return
+  selectHeartTarget: (targetPlayer: PLAYER) => void; // New function for heart target selection
 
   // Utilities
   getCriticalMass: (row: number, col: number) => number;
@@ -96,6 +102,11 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
   // Base mode specific
   hqs: [],
   powerUps: [],
+
+  // Heart power-up target selection state
+  heartSelectionMode: false,
+  setHeartSelectionMode: (enabled) => set({ heartSelectionMode: enabled }),
+  pendingHeartPlayer: undefined,
 
   // History for undo
   history: [],
@@ -317,10 +328,10 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
   // Check if a move is valid
   isValidMove: (row, col) => {
-    const { grid, currentPlayer, gameOver, isBaseMode, hqs } = get();
+    const { grid, currentPlayer, gameOver, isBaseMode, hqs, heartSelectionMode } = get();
 
-    // No moves if game is over
-    if (gameOver) return false;
+    // No moves if game is over or in heart selection mode
+    if (gameOver || heartSelectionMode) return false;
 
     // Safety check for valid coordinates
     if (row < 0 || col < 0 || row >= grid.length || col >= grid[0].length) {
@@ -516,11 +527,26 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           const ownHQ = newHqs.find(hq => hq.player === currentPlayer);
           
           if (numPlayers >= 3) {
-            // 3-4 player game: Heart just gives you a life (no damage to enemy)
-            console.log("Heart power-up in 3-4 player game: just adding health to own HQ");
-            
-            if (ownHQ && ownHQ.health < 5) {
+            // 3+ player game: Check if player has 5 lives
+            if (ownHQ && ownHQ.health >= 5) {
+              // Player has max health, allow them to choose enemy to damage
+              console.log("Heart power-up in 3+ player game with max health: entering target selection mode");
+              
+              // Remove the power-up first
+              newPowerUps.splice(powerUpIndex, 1);
+              
+              set(state => ({
+                ...state,
+                heartSelectionMode: true,
+                pendingHeartPlayer: currentPlayer,
+                powerUps: newPowerUps
+              }));
+              
+              // Don't continue turn - wait for target selection
+              return;
+            } else if (ownHQ && ownHQ.health < 5) {
               // Add health to own HQ if less than 5
+              console.log("Heart power-up in 3+ player game: just adding health to own HQ");
               ownHQ.health += 1;
               
               // Trigger healing animation effect
@@ -1149,9 +1175,9 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
       }
 
       // Generate only ONE power-up with a 25% chance after the first turn
-      // But don't generate if we already have too many (max 4 power-ups)
-      if (isBaseMode && state.history.length >= 1 && Math.random() < 0.25 && newPowerUps.length < 4) {
-        console.log("Randomly generating ONE power-up with 25% chance");
+      // But don't generate if we already have too many (max 4 power-ups) - reduced spawn rate by 20%
+      if (isBaseMode && state.history.length >= 1 && Math.random() < 0.2 && newPowerUps.length < 4) {
+        console.log("Randomly generating ONE power-up with 20% chance");
         const { rows, cols } = state;
 
         // Import isAdjacentTo utility function from gameUtils
@@ -1159,8 +1185,24 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           return Math.abs(row1 - row2) <= 1 && Math.abs(col1 - col2) <= 1;
         };
 
-        // 50% chance of diamond, 50% chance of heart
-        const powerUpType: PowerUpType = Math.random() < 0.5 ? 'diamond' : 'heart';
+        // Never allow two power-ups at the same time - check existing power-ups and choose different type
+        const existingTypes = newPowerUps.map(p => p.type);
+        let powerUpType: PowerUpType;
+        
+        if (existingTypes.includes('diamond') && existingTypes.includes('heart')) {
+          // Both types exist, don't spawn any more
+          console.log("Both power-up types already exist, skipping spawn");
+          return;
+        } else if (existingTypes.includes('diamond')) {
+          // Diamond exists, only spawn heart
+          powerUpType = 'heart';
+        } else if (existingTypes.includes('heart')) {
+          // Heart exists, only spawn diamond
+          powerUpType = 'diamond';
+        } else {
+          // No power-ups exist, 50% chance of either
+          powerUpType = Math.random() < 0.5 ? 'diamond' : 'heart';
+        }
         
         // Find a valid position for the power-up
         let attempts = 0;
@@ -1241,6 +1283,71 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         hqs: newHqs,
         powerUps: newPowerUps
       };
+    });
+  },
+
+  // Select heart target in multiplayer mode
+  selectHeartTarget: (targetPlayer) => {
+    const { heartSelectionMode, pendingHeartPlayer, hqs } = get();
+    
+    if (!heartSelectionMode || !pendingHeartPlayer) {
+      console.log("Not in heart selection mode");
+      return;
+    }
+
+    // Find the target HQ
+    const targetHQ = hqs.find(hq => hq.player === targetPlayer);
+    if (!targetHQ) {
+      console.log("Target HQ not found");
+      return;
+    }
+
+    // Can't target yourself
+    if (targetPlayer === pendingHeartPlayer) {
+      console.log("Can't target yourself");
+      return;
+    }
+
+    // Damage the target HQ
+    console.log(`Heart power-up: ${pendingHeartPlayer} targeting ${targetPlayer}`);
+    
+    set(state => {
+      const newHqs = [...state.hqs];
+      const targetHQIndex = newHqs.findIndex(hq => hq.player === targetPlayer);
+      
+      if (targetHQIndex !== -1) {
+        newHqs[targetHQIndex].health -= 1;
+        
+        // Exit heart selection mode
+        const newState = {
+          ...state,
+          hqs: newHqs,
+          heartSelectionMode: false,
+          pendingHeartPlayer: undefined,
+          lastHQDamaged: {
+            row: targetHQ.row,
+            col: targetHQ.col,
+            player: targetPlayer,
+            timestamp: Date.now(),
+            type: 'damage' as const
+          }
+        };
+
+        // Continue with normal turn progression
+        const { checkWinCondition, nextPlayer } = get();
+        
+        // Check for win condition
+        checkWinCondition(newState.hqs);
+        
+        // Move to next player if game isn't over
+        if (!newState.gameOver) {
+          newState.currentPlayer = nextPlayer(state.currentPlayer);
+        }
+
+        return newState;
+      }
+      
+      return state;
     });
   },
 
