@@ -488,7 +488,8 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 w-[90%] max-w-lg"
+          className="bg-black p-8"
+          style={{ width: 'fit-content', minWidth: '320px' }}
         >
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-3" style={{ fontFamily: 'Menlo, monospace' }}>Number of Players</h3>
@@ -515,7 +516,7 @@ const MainMenu: React.FC = () => {
           
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-3" style={{ width: 'fit-content' }}>
               {playerConfigs.map((config) => (
                 <motion.div 
                   key={config.player} 

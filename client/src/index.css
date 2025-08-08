@@ -4,6 +4,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  /* Game board container */
+  .game-board-container {
+    padding: 8px !important;
+    overflow: hidden;
+    max-width: 100vw;
+    max-height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Scale down the entire game board for mobile */
+  .game-board {
+    transform-origin: center center;
+    transform: scale(0.6);
+    width: fit-content;
+    height: fit-content;
+  }
+  
+  /* Menu containers */
+  .menu-container {
+    padding: 16px !important;
+    margin: 8px !important;
+    max-width: 95vw !important;
+    box-sizing: border-box;
+  }
+  
+  /* Player selection menu */
+  .player-selection-container {
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 16px 12px !important;
+    box-sizing: border-box;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .game-board {
+    transform: scale(0.45);
+  }
+}
+
+/* Landscape mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .game-board {
+    transform: scale(0.5);
+  }
+}
+
 @layer utilities {
   .shadow-glow {
     box-shadow: 0 0 15px 2px rgba(255, 255, 255, 0.3);
