@@ -2,16 +2,31 @@ import { PLAYER } from './constants';
 import { GridCell, HQCell } from './stores/useChainReaction';
 import { calculateCriticalMass, isAdjacentTo } from './gameUtils';
 
-export enum AI_DIFFICULTY {
-  EASY = 'easy',
-  MEDIUM = 'medium',
-  HARD = 'hard'
+export enum AI_STRATEGY {
+  WEIGHTS_BASED = 'weights',
+  MINIMAX = 'minimax'
 }
 
 interface AIMove {
   row: number;
   col: number;
   score: number;
+}
+
+interface GameState {
+  grid: GridCell[][];
+  currentPlayer: PLAYER;
+  isBaseMode: boolean;
+  hqs?: HQCell[];
+}
+
+interface MoveEvaluation {
+  move: AIMove;
+  immediate: number;
+  tactical: number;
+  strategic: number;
+  risk: number;
+  chainReaction: number;
 }
 
 /**
@@ -111,12 +126,16 @@ export const calculateCriticalMassForAI = (
 };
 
 /**
- * Count how many cells a player controls
+ * Deep copy of grid for simulations
  */
-const countPlayerCells = (
-  grid: GridCell[][],
-  player: PLAYER
-): number => {
+const cloneGrid = (grid: GridCell[][]): GridCell[][] => {
+  return grid.map(row => row.map(cell => ({ ...cell })));
+};
+
+/**
+ * Count cells controlled by a player
+ */
+const countPlayerCells = (grid: GridCell[][], player: PLAYER): number => {
   let count = 0;
   for (let row = 0; row < grid.length; row++) {
     for (let col = 0; col < grid[0].length; col++) {
@@ -129,502 +148,661 @@ const countPlayerCells = (
 };
 
 /**
- * Check if a cell would chain explode if filled to capacity
- * Returns the number of cells in the potential chain
+ * Count total atoms controlled by a player
  */
-const simulateChainReaction = (
-  grid: GridCell[][],
-  startRow: number,
-  startCol: number,
-  player: PLAYER
-): number => {
-  // Create a copy of the grid for simulation
-  const tempGrid = JSON.parse(JSON.stringify(grid)) as GridCell[][];
-  
-  // Fill the target cell to critical mass
-  const criticalMass = calculateCriticalMassForAI(tempGrid, startRow, startCol);
-  tempGrid[startRow][startCol].atoms = criticalMass;
-  tempGrid[startRow][startCol].player = player;
-  
-  // Count affected cells
-  let cellsInChain = 0;
-  const explodedCells = new Set<string>();
-  
-  // Simulate explosions
-  const explodeCellRecursive = (row: number, col: number): void => {
-    const cellKey = `${row},${col}`;
-    if (explodedCells.has(cellKey)) return;
-    
-    const cell = tempGrid[row][col];
-    const critical = calculateCriticalMassForAI(tempGrid, row, col);
-    
-    if (cell.atoms >= critical) {
-      explodedCells.add(cellKey);
-      cellsInChain++;
-      
-      // Distribute atoms to adjacent cells
-      const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-      
-      // Remove atoms from current cell
-      tempGrid[row][col].atoms = 0;
-      tempGrid[row][col].player = null;
-      
-      // Add atoms to adjacent cells
-      for (const [dr, dc] of directions) {
-        const newRow = row + dr;
-        const newCol = col + dc;
-        
-        if (newRow >= 0 && newRow < tempGrid.length && 
-            newCol >= 0 && newCol < tempGrid[0].length) {
-          tempGrid[newRow][newCol].atoms += 1;
-          tempGrid[newRow][newCol].player = player;
-          
-          // Recursively check if this new cell will explode
-          if (tempGrid[newRow][newCol].atoms >= calculateCriticalMassForAI(tempGrid, newRow, newCol)) {
-            explodeCellRecursive(newRow, newCol);
-          }
-        }
-      }
-    }
-  };
-  
-  // Start the chain reaction at the initial cell
-  explodeCellRecursive(startRow, startCol);
-  
-  return cellsInChain;
-};
-
-/**
- * Identify opponent cells that are close to explosion
- */
-const findOpponentVulnerableCells = (
-  grid: GridCell[][],
-  currentPlayer: PLAYER
-): { row: number, col: number, priority: number }[] => {
-  const vulnerableCells = [];
-  
+const countPlayerAtoms = (grid: GridCell[][], player: PLAYER): number => {
+  let count = 0;
   for (let row = 0; row < grid.length; row++) {
     for (let col = 0; col < grid[0].length; col++) {
-      const cell = grid[row][col];
-      
-      // If cell belongs to an opponent and has atoms
-      if (cell.player !== null && cell.player !== currentPlayer && cell.atoms > 0) {
-        const criticalMass = calculateCriticalMassForAI(grid, row, col);
-        const remainingAtomsUntilCritical = criticalMass - cell.atoms;
-        
-        // Check if it's close to explosion (1 or 2 atoms away)
-        if (remainingAtomsUntilCritical <= 2) {
-          // Higher priority for cells that are closer to explosion
-          const priority = remainingAtomsUntilCritical === 1 ? 3 : 1;
-          vulnerableCells.push({ row, col, priority });
-        }
+      if (grid[row][col].player === player) {
+        count += grid[row][col].atoms;
       }
     }
   }
-  
-  return vulnerableCells;
+  return count;
 };
 
 /**
- * Evaluate a cell's score for AI decision making
- * Enhanced for Hard difficulty
+ * Simulate placing a dot and return the resulting grid state
  */
-const evaluateMove = (
+const simulateMove = (
   grid: GridCell[][],
   row: number,
   col: number,
-  currentPlayer: PLAYER,
-  isBaseMode: boolean,
-  hqs?: HQCell[],
-  difficulty: AI_DIFFICULTY = AI_DIFFICULTY.MEDIUM
-): number => {
-  const cell = grid[row][col];
-  const criticalMass = calculateCriticalMassForAI(grid, row, col);
-  let score = 0;
+  player: PLAYER
+): { grid: GridCell[][], explosions: number, capturedCells: number } => {
+  const simGrid = cloneGrid(grid);
+  let explosions = 0;
+  let capturedCells = 0;
   
-  // Base score calculation for all difficulties
-  if (cell.player === currentPlayer) {
-    // Adding to own cell
-    score += 10;
-    
-    // If cell is near critical mass, prioritize it
-    if (cell.atoms === criticalMass - 1) {
-      score += 50; // About to explode
-    } else if (cell.atoms === criticalMass - 2) {
-      score += 20; // Getting close to explosion
-    }
-  } else if (cell.player === null) {
-    // Empty cell
-    score += 5;
+  // Apply the move
+  if (simGrid[row][col].player === player) {
+    simGrid[row][col].atoms += 1;
+  } else {
+    if (simGrid[row][col].player !== null) capturedCells++;
+    simGrid[row][col].player = player;
+    simGrid[row][col].atoms = 1;
   }
   
-  // Add randomness based on difficulty
-  switch (difficulty) {
-    case AI_DIFFICULTY.EASY:
-      // More random moves
-      score += Math.floor(Math.random() * 40);
-      break;
-    case AI_DIFFICULTY.MEDIUM:
-      // Some randomness but more strategic
-      score += Math.floor(Math.random() * 20);
-      break;
-    case AI_DIFFICULTY.HARD:
-      // Very little randomness for hard AI
-      score += Math.floor(Math.random() * 3);
-      break;
-  }
-  
-  // Enhanced evaluation for HARD difficulty
-  if (difficulty === AI_DIFFICULTY.HARD) {
-    // Simulate chain reaction and value moves that create bigger chains
-    const chainSize = simulateChainReaction(grid, row, col, currentPlayer);
-    score += chainSize * 25; // Increased importance of chain reactions
+  // Process chain reactions
+  const processExplosions = () => {
+    let hasExplosion = false;
     
-    // Strategic positioning - corners and edges are more valuable in early game
-    const isCorner = (row === 0 || row === grid.length - 1) && (col === 0 || col === grid[0].length - 1);
-    const isEdge = row === 0 || row === grid.length - 1 || col === 0 || col === grid[0].length - 1;
-    
-    const playerCellCount = countPlayerCells(grid, currentPlayer);
-    const isEarlyGame = playerCellCount < 6;
-    const isMidGame = playerCellCount >= 6 && playerCellCount < 12;
-    
-    // More strategic early game positioning
-    if (isEarlyGame) {
-      if (isCorner) score += 80; // Increased corner preference
-      else if (isEdge) score += 40; // Increased edge preference
-    } else if (isMidGame) {
-      // In mid-game, still prefer corners but less strongly
-      if (isCorner) score += 30;
-    }
-    
-    // Find opponent cells that are about to explode and prioritize capturing them
-    const vulnerableCells = findOpponentVulnerableCells(grid, currentPlayer);
-    for (const vulnerableCell of vulnerableCells) {
-      // If this move is adjacent to a vulnerable cell, it's a high priority target
-      if (isAdjacentTo(row, col, vulnerableCell.row, vulnerableCell.col)) {
-        score += 55 * vulnerableCell.priority; // Increased opportunistic capture
-      }
-    }
-    
-    // Defensive play - avoid placing next to opponent's cells that are about to explode
-    for (let r = 0; r < grid.length; r++) {
-      for (let c = 0; c < grid[0].length; c++) {
-        if (grid[r][c].player !== null && 
-            grid[r][c].player !== currentPlayer && 
-            grid[r][c].atoms === calculateCriticalMassForAI(grid, r, c) - 1 &&
-            isAdjacentTo(row, col, r, c)) {
-          // This is a dangerous move - highly penalize it
-          score -= 80; // Increased penalty for dangerous moves
-        }
-      }
-    }
-    
-    // Advanced strategies for Hard AI
-    
-    // 1. Look for cells that will trigger multi-cell chain reactions
-    if (chainSize >= 3) {
-      score += 30 * (chainSize - 2); // Additional bonus for large chains
-    }
-    
-    // 2. Avoid moves that would make it easy for opponents to capture
-    // Check if this move would put us in a position where an opponent can easily capture
-    let dangerScore = 0;
-    
-    // Count adjacent cells owned by opponents
-    let adjacentOpponentCells = 0;
-    for (let r = Math.max(0, row - 1); r <= Math.min(grid.length - 1, row + 1); r++) {
-      for (let c = Math.max(0, col - 1); c <= Math.min(grid[0].length - 1, col + 1); c++) {
-        if ((r !== row || c !== col) && // not the same cell
-            grid[r][c].player !== null &&
-            grid[r][c].player !== currentPlayer) {
-          adjacentOpponentCells++;
+    for (let r = 0; r < simGrid.length; r++) {
+      for (let c = 0; c < simGrid[0].length; c++) {
+        const cell = simGrid[r][c];
+        const criticalMass = calculateCriticalMassForAI(simGrid, r, c);
+        
+        if (cell.atoms >= criticalMass) {
+          hasExplosion = true;
+          explosions++;
           
-          // Extra penalty if opponent cell is close to critical mass
-          const opponentCriticalMass = calculateCriticalMassForAI(grid, r, c);
-          if (grid[r][c].atoms >= opponentCriticalMass - 2) {
-            dangerScore -= 25;
-          }
-        }
-      }
-    }
-    
-    if (adjacentOpponentCells >= 2) {
-      dangerScore -= 15 * adjacentOpponentCells;
-    }
-    
-    // 3. Think one step ahead - simulate if this move would lead to losing dots on opponent's turn
-    // Create a copy of the grid to simulate the move
-    const simulatedGrid = JSON.parse(JSON.stringify(grid)) as GridCell[][];
-    
-    // Apply the move
-    if (simulatedGrid[row][col].player === currentPlayer) {
-      simulatedGrid[row][col].atoms += 1;
-    } else {
-      simulatedGrid[row][col].player = currentPlayer;
-      simulatedGrid[row][col].atoms = 1;
-    }
-    
-    // Check if this move would make us vulnerable to chain reactions on opponent's turn
-    // Find all opponent possible moves that would capture our cells
-    let maxLossRisk = 0;
-    
-    // Find all opponent players
-    const opponentPlayers = Object.values(PLAYER).filter(player => player !== currentPlayer);
-    
-    for (let oppRow = 0; oppRow < grid.length; oppRow++) {
-      for (let oppCol = 0; oppCol < grid[0].length; oppCol++) {
-        // For each opponent cell that could make a move
-        for (const opponent of opponentPlayers) {
-          // Check if this would be a valid move for the opponent
-          if (isValidMoveForAI(simulatedGrid, oppRow, oppCol, opponent, isBaseMode, hqs)) {
-            // Simulate the opponent's move
-            const opponentSimGrid = JSON.parse(JSON.stringify(simulatedGrid)) as GridCell[][];
+          // Remove atoms from exploding cell
+          simGrid[r][c].atoms = 0;
+          simGrid[r][c].player = null;
+          
+          // Distribute to adjacent cells
+          const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+          for (const [dr, dc] of directions) {
+            const newRow = r + dr;
+            const newCol = c + dc;
             
-            if (opponentSimGrid[oppRow][oppCol].player === opponent) {
-              opponentSimGrid[oppRow][oppCol].atoms += 1;
-            } else {
-              opponentSimGrid[oppRow][oppCol].player = opponent;
-              opponentSimGrid[oppRow][oppCol].atoms = 1;
-            }
-            
-            // Count how many of our cells would be captured
-            let capturedCells = 0;
-            for (let r = 0; r < grid.length; r++) {
-              for (let c = 0; c < grid[0].length; c++) {
-                if (simulatedGrid[r][c].player === currentPlayer && 
-                    (opponentSimGrid[r][c].player !== currentPlayer || opponentSimGrid[r][c].atoms === 0)) {
-                  capturedCells++;
-                }
+            if (newRow >= 0 && newRow < simGrid.length && 
+                newCol >= 0 && newCol < simGrid[0].length) {
+              if (simGrid[newRow][newCol].player !== player && simGrid[newRow][newCol].player !== null) {
+                capturedCells++;
               }
+              simGrid[newRow][newCol].atoms += 1;
+              simGrid[newRow][newCol].player = player;
             }
-            
-            // Update max risk
-            maxLossRisk = Math.max(maxLossRisk, capturedCells);
           }
         }
       }
     }
     
-    // Heavily penalize moves that could lead to significant losses on the next turn
-    if (maxLossRisk > 0) {
-      dangerScore -= maxLossRisk * 40;
-    }
-    
-    score += dangerScore;
-    
-    // 3. Prioritize moves that control more territory
-    // Higher score for moves that would give us control of more cells
-    if (chainSize > 0) {
-      const cellsControlledBefore = countPlayerCells(grid, currentPlayer);
-      
-      // Create a copy of the grid to simulate the move
-      const simulatedGrid = JSON.parse(JSON.stringify(grid));
-      simulatedGrid[row][col].player = currentPlayer;
-      simulatedGrid[row][col].atoms++;
-      
-      // If this would cause an explosion, don't double-count it since chainSize already covers this
-      const cellsControlledAfter = countPlayerCells(simulatedGrid, currentPlayer);
-      const cellsGained = cellsControlledAfter - cellsControlledBefore;
-      
-      if (cellsGained > 0) {
-        score += cellsGained * 20;
-      }
-    }
+    return hasExplosion;
+  };
+  
+  // Keep processing until no more explosions
+  while (processExplosions()) {
+    // Continue processing
   }
   
-  // Base mode specific scoring
-  if (isBaseMode && hqs) {
-    // Find opponent HQs
-    const opponentHQs = hqs.filter(hq => hq.player !== currentPlayer && hq.health > 0);
-    
-    // Calculate distance to enemy HQs - prioritize moves closer to enemies
-    for (const enemyHQ of opponentHQs) {
-      const distance = Math.abs(row - enemyHQ.row) + Math.abs(col - enemyHQ.col);
-      
-      if (difficulty === AI_DIFFICULTY.HARD) {
-        // Hard AI aggressively targets enemy HQs
-        score += Math.max(0, 45 - distance * 4); // Increased aggression
-        
-        // Extra bonus for cells that can attack enemy HQ directly
-        if (distance === 1) {
-          score += 80; // Much higher bonus for direct attack positions
-        } else if (distance === 2) {
-          score += 40; // Also bonus for cells that are 2 away (could reach HQ with chain)
-        }
-        
-        // Consider enemy HQ health in targeting
-        if (enemyHQ.health <= 2) {
-          // Aggressive targeting of nearly defeated enemies
-          score += (3 - enemyHQ.health) * 40;
-        }
-        
-        // Check if this move could create a chain reaction toward enemy HQ
-        const potentialPath = hasPathToHQ(grid, row, col, enemyHQ.row, enemyHQ.col);
-        if (potentialPath) {
-          score += 60;
-        }
-      } else if (difficulty === AI_DIFFICULTY.MEDIUM) {
-        // Medium AI considers attacking but less aggressively
-        score += Math.max(0, 15 - distance);
-      }
-    }
-    
-    // Find player's HQ
-    const playerHQ = hqs.find(hq => hq.player === currentPlayer);
-    
-    if (playerHQ) {
-      // Calculate distance to own HQ
-      const distanceToOwnHQ = Math.abs(row - playerHQ.row) + Math.abs(col - playerHQ.col);
-      
-      if (difficulty === AI_DIFFICULTY.HARD) {
-        if (playerHQ.health <= 2) {
-          // Hard AI prioritizes defense when HQ is low
-          score += Math.max(0, 70 - distanceToOwnHQ * 5); // Stronger defense when low health
-        } else if (playerHQ.health === 3) {
-          // Still defensive when health is moderate
-          score += Math.max(0, 40 - distanceToOwnHQ * 3);
-        } else {
-          // Some basic defense even when health is good
-          score += Math.max(0, 20 - distanceToOwnHQ * 2);
-        }
-        
-        // Strategic balance between offense and defense based on HQ health
-        const lowestEnemyHealth = Math.min(...opponentHQs.map(hq => hq.health));
-        
-        // If any enemy HQ is close to defeat and our HQ has decent health, prioritize offense
-        if (lowestEnemyHealth <= 2 && playerHQ.health >= 3) {
-          score -= Math.max(0, 30 - distanceToOwnHQ * 3); // Reduce defensive score to favor offense
-        }
-        
-        // If our HQ is in better shape than any enemy, be more aggressive
-        if (playerHQ.health > lowestEnemyHealth) {
-          const healthDifference = playerHQ.health - lowestEnemyHealth;
-          score -= Math.max(0, 15 * healthDifference - distanceToOwnHQ * 3);
-        }
-      } else if (difficulty === AI_DIFFICULTY.MEDIUM && playerHQ.health < 3) {
-        // Medium AI considers defense but less strongly
-        score += Math.max(0, 15 - distanceToOwnHQ * 2);
-      }
-    }
-  }
-  
-  // Helper function to check if there's a potential path for chain reaction
-  function hasPathToHQ(grid: GridCell[][], startRow: number, startCol: number, 
-                       targetRow: number, targetCol: number): boolean {
-    // Check if there's a potential path of filled or nearly filled cells toward the HQ
-    // This is a simple heuristic, not a complete pathing algorithm
-    const direction = {
-      row: Math.sign(targetRow - startRow),
-      col: Math.sign(targetCol - startCol)
-    };
-    
-    let currentRow = startRow;
-    let currentCol = startCol;
-    let pathFound = false;
-    let steps = 0;
-    const maxSteps = 3; // Limit path search to a reasonable length
-    
-    while (steps < maxSteps && !pathFound) {
-      currentRow += direction.row;
-      currentCol += direction.col;
-      
-      // Check if we've reached target area
-      if (Math.abs(currentRow - targetRow) <= 1 && Math.abs(currentCol - targetCol) <= 1) {
-        pathFound = true;
-        break;
-      }
-      
-      // Check if we're still on the grid
-      if (currentRow < 0 || currentRow >= grid.length || 
-          currentCol < 0 || currentCol >= grid[0].length) {
-        break;
-      }
-      
-      // Check if this cell has atoms (owned by anyone)
-      const cell = grid[currentRow][currentCol];
-      if (cell.atoms === 0) {
-        break; // Path broken by empty cell
-      }
-      
-      steps++;
-    }
-    
-    return pathFound;
-  }
-  
-  return score;
+  return { grid: simGrid, explosions, capturedCells };
 };
 
 /**
- * AI makes a decision for the best move
+ * WEIGHTS-BASED AI SYSTEM
+ * Uses sophisticated weighted scoring with domain-specific heuristics
+ */
+class WeightsBasedAI {
+  private readonly WEIGHTS = {
+    // Immediate tactical benefits
+    CAPTURE_CELL: 15,
+    BUILD_ON_OWN: 8,
+    EMPTY_CELL: 3,
+    
+    // Chain reaction values
+    CHAIN_MULTIPLIER: 25,
+    EXPLOSION_BONUS: 40,
+    BIG_CHAIN_BONUS: 60, // For chains of 4+ cells
+    
+    // Positional strategy
+    CORNER_EARLY: 35,
+    EDGE_EARLY: 20,
+    CENTER_MID: 15,
+    
+    // Critical mass strategy
+    NEAR_CRITICAL: 50,
+    ONE_FROM_CRITICAL: 80,
+    
+    // Defensive considerations
+    DEFEND_CRITICAL: 45,
+    AVOID_DANGER: -60,
+    BLOCK_OPPONENT: 30,
+    
+    // Base mode specific
+    HQ_ATTACK: 70,
+    HQ_DEFENSE: 55,
+    PATH_TO_HQ: 25,
+    
+    // Risk assessment
+    VULNERABILITY_PENALTY: -40,
+    ISOLATION_PENALTY: -20,
+    OVEREXTENSION_PENALTY: -35
+  };
+
+  evaluateMove(
+    grid: GridCell[][],
+    row: number,
+    col: number,
+    currentPlayer: PLAYER,
+    isBaseMode: boolean,
+    hqs?: HQCell[]
+  ): MoveEvaluation {
+    const cell = grid[row][col];
+    let immediate = 0;
+    let tactical = 0;
+    let strategic = 0;
+    let risk = 0;
+    let chainReaction = 0;
+
+    // Immediate scoring
+    if (cell.player === currentPlayer) {
+      immediate += this.WEIGHTS.BUILD_ON_OWN;
+      
+      const criticalMass = calculateCriticalMassForAI(grid, row, col);
+      if (cell.atoms === criticalMass - 1) {
+        immediate += this.WEIGHTS.ONE_FROM_CRITICAL;
+      } else if (cell.atoms === criticalMass - 2) {
+        immediate += this.WEIGHTS.NEAR_CRITICAL;
+      }
+    } else if (cell.player === null) {
+      immediate += this.WEIGHTS.EMPTY_CELL;
+    } else {
+      immediate += this.WEIGHTS.CAPTURE_CELL;
+    }
+
+    // Simulate the move for chain reaction analysis
+    const simulation = simulateMove(grid, row, col, currentPlayer);
+    chainReaction = simulation.explosions * this.WEIGHTS.EXPLOSION_BONUS;
+    
+    if (simulation.explosions >= 2) {
+      chainReaction += this.WEIGHTS.CHAIN_MULTIPLIER * simulation.explosions;
+    }
+    if (simulation.explosions >= 4) {
+      chainReaction += this.WEIGHTS.BIG_CHAIN_BONUS;
+    }
+
+    immediate += simulation.capturedCells * this.WEIGHTS.CAPTURE_CELL;
+
+    // Strategic positioning
+    const isCorner = (row === 0 || row === grid.length - 1) && (col === 0 || col === grid[0].length - 1);
+    const isEdge = row === 0 || row === grid.length - 1 || col === 0 || col === grid[0].length - 1;
+    const isCenter = Math.abs(row - grid.length / 2) <= 1 && Math.abs(col - grid[0].length / 2) <= 1;
+    
+    const playerCells = countPlayerCells(grid, currentPlayer);
+    const gamePhase = this.getGamePhase(grid, playerCells);
+    
+    if (gamePhase === 'early') {
+      if (isCorner) strategic += this.WEIGHTS.CORNER_EARLY;
+      else if (isEdge) strategic += this.WEIGHTS.EDGE_EARLY;
+    } else if (gamePhase === 'mid' && isCenter) {
+      strategic += this.WEIGHTS.CENTER_MID;
+    }
+
+    // Tactical analysis
+    tactical += this.evaluateTacticalPosition(grid, row, col, currentPlayer);
+    
+    // Risk assessment
+    risk += this.evaluateRisk(grid, row, col, currentPlayer, isBaseMode, hqs);
+
+    // Base mode specific evaluation
+    if (isBaseMode && hqs) {
+      const baseScore = this.evaluateBaseMode(grid, row, col, currentPlayer, hqs);
+      strategic += baseScore;
+    }
+
+    return {
+      move: { row, col, score: immediate + tactical + strategic + risk + chainReaction },
+      immediate,
+      tactical,
+      strategic,
+      risk,
+      chainReaction
+    };
+  }
+
+  private getGamePhase(grid: GridCell[][], playerCells: number): 'early' | 'mid' | 'late' {
+    const totalCells = grid.length * grid[0].length;
+    const cellRatio = playerCells / totalCells;
+    
+    if (cellRatio < 0.15) return 'early';
+    if (cellRatio < 0.4) return 'mid';
+    return 'late';
+  }
+
+  private evaluateTacticalPosition(
+    grid: GridCell[][],
+    row: number,
+    col: number,
+    currentPlayer: PLAYER
+  ): number {
+    let score = 0;
+    
+    // Count adjacent cells by type
+    let ownAdjacent = 0;
+    let opponentAdjacent = 0;
+    let opponentNearCritical = 0;
+    
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    for (const [dr, dc] of directions) {
+      const newRow = row + dr;
+      const newCol = col + dc;
+      
+      if (newRow >= 0 && newRow < grid.length && newCol >= 0 && newCol < grid[0].length) {
+        const adjCell = grid[newRow][newCol];
+        
+        if (adjCell.player === currentPlayer) {
+          ownAdjacent++;
+        } else if (adjCell.player !== null) {
+          opponentAdjacent++;
+          
+          const criticalMass = calculateCriticalMassForAI(grid, newRow, newCol);
+          if (adjCell.atoms >= criticalMass - 1) {
+            opponentNearCritical++;
+          }
+        }
+      }
+    }
+    
+    // Bonus for connecting with own cells
+    score += ownAdjacent * 10;
+    
+    // Penalty for being surrounded by opponents
+    if (opponentAdjacent >= 3) {
+      score += this.WEIGHTS.VULNERABILITY_PENALTY;
+    }
+    
+    // Defense against opponent critical cells
+    score += opponentNearCritical * this.WEIGHTS.DEFEND_CRITICAL;
+    
+    return score;
+  }
+
+  private evaluateRisk(
+    grid: GridCell[][],
+    row: number,
+    col: number,
+    currentPlayer: PLAYER,
+    isBaseMode: boolean,
+    hqs?: HQCell[]
+  ): number {
+    let riskScore = 0;
+    
+    // Simulate opponent responses
+    const opponents = Object.values(PLAYER).filter(p => p !== currentPlayer);
+    
+    for (const opponent of opponents) {
+      const opponentMoves = this.findValidMoves(grid, opponent, isBaseMode, hqs);
+      
+      for (const move of opponentMoves) {
+        const opponentSim = simulateMove(grid, move.row, move.col, opponent);
+        
+        // Check how many of our cells would be captured
+        const ourCellsBefore = countPlayerCells(grid, currentPlayer);
+        const ourCellsAfter = countPlayerCells(opponentSim.grid, currentPlayer);
+        const cellsLost = ourCellsBefore - ourCellsAfter;
+        
+        if (cellsLost > 0) {
+          riskScore += cellsLost * this.WEIGHTS.VULNERABILITY_PENALTY;
+        }
+      }
+    }
+    
+    return riskScore;
+  }
+
+  private evaluateBaseMode(
+    grid: GridCell[][],
+    row: number,
+    col: number,
+    currentPlayer: PLAYER,
+    hqs: HQCell[]
+  ): number {
+    let score = 0;
+    
+    const playerHQ = hqs.find(hq => hq.player === currentPlayer);
+    const enemyHQs = hqs.filter(hq => hq.player !== currentPlayer && hq.health > 0);
+    
+    // Attack evaluation
+    for (const enemyHQ of enemyHQs) {
+      const distance = Math.abs(row - enemyHQ.row) + Math.abs(col - enemyHQ.col);
+      
+      if (distance === 1) {
+        score += this.WEIGHTS.HQ_ATTACK * (5 - enemyHQ.health);
+      } else if (distance <= 3) {
+        score += this.WEIGHTS.PATH_TO_HQ * (4 - distance) * (5 - enemyHQ.health);
+      }
+    }
+    
+    // Defense evaluation
+    if (playerHQ && playerHQ.health <= 3) {
+      const distanceToOwnHQ = Math.abs(row - playerHQ.row) + Math.abs(col - playerHQ.col);
+      if (distanceToOwnHQ <= 2) {
+        score += this.WEIGHTS.HQ_DEFENSE * (4 - playerHQ.health) * (3 - distanceToOwnHQ);
+      }
+    }
+    
+    return score;
+  }
+
+  private findValidMoves(
+    grid: GridCell[][],
+    player: PLAYER,
+    isBaseMode: boolean,
+    hqs?: HQCell[]
+  ): AIMove[] {
+    const moves: AIMove[] = [];
+    
+    for (let row = 0; row < grid.length; row++) {
+      for (let col = 0; col < grid[0].length; col++) {
+        if (isValidMoveForAI(grid, row, col, player, isBaseMode, hqs)) {
+          moves.push({ row, col, score: 0 });
+        }
+      }
+    }
+    
+    return moves;
+  }
+}
+
+/**
+ * MINIMAX-STYLE AI SYSTEM
+ * Uses game tree search with alpha-beta pruning and advanced evaluation
+ */
+class MinimaxAI {
+  private readonly MAX_DEPTH = 4;
+  private readonly EVAL_WEIGHTS = {
+    MATERIAL: 100,
+    POSITION: 50,
+    MOBILITY: 30,
+    SAFETY: 80,
+    TEMPO: 25
+  };
+
+  evaluateMove(
+    grid: GridCell[][],
+    row: number,
+    col: number,
+    currentPlayer: PLAYER,
+    isBaseMode: boolean,
+    hqs?: HQCell[]
+  ): MoveEvaluation {
+    const gameState: GameState = { grid, currentPlayer, isBaseMode, hqs };
+    
+    // Use minimax with alpha-beta pruning
+    const score = this.minimax(
+      gameState,
+      { row, col, score: 0 },
+      this.MAX_DEPTH,
+      -Infinity,
+      Infinity,
+      true
+    );
+
+    return {
+      move: { row, col, score },
+      immediate: score,
+      tactical: 0,
+      strategic: 0,
+      risk: 0,
+      chainReaction: 0
+    };
+  }
+
+  private minimax(
+    state: GameState,
+    move: AIMove,
+    depth: number,
+    alpha: number,
+    beta: number,
+    isMaximizing: boolean
+  ): number {
+    if (depth === 0) {
+      return this.evaluatePosition(state);
+    }
+
+    // Apply the move to get new state
+    const newGrid = this.applyMove(state.grid, move.row, move.col, state.currentPlayer);
+    const newState: GameState = {
+      ...state,
+      grid: newGrid,
+      currentPlayer: this.getNextPlayer(state.currentPlayer, state.grid)
+    };
+
+    if (isMaximizing) {
+      let maxEval = -Infinity;
+      const moves = this.generateMoves(newState);
+      
+      for (const candidateMove of moves) {
+        const eval_score = this.minimax(newState, candidateMove, depth - 1, alpha, beta, false);
+        maxEval = Math.max(maxEval, eval_score);
+        alpha = Math.max(alpha, eval_score);
+        
+        if (beta <= alpha) {
+          break; // Alpha-beta pruning
+        }
+      }
+      
+      return maxEval;
+    } else {
+      let minEval = Infinity;
+      const moves = this.generateMoves(newState);
+      
+      for (const candidateMove of moves) {
+        const eval_score = this.minimax(newState, candidateMove, depth - 1, alpha, beta, true);
+        minEval = Math.min(minEval, eval_score);
+        beta = Math.min(beta, eval_score);
+        
+        if (beta <= alpha) {
+          break; // Alpha-beta pruning
+        }
+      }
+      
+      return minEval;
+    }
+  }
+
+  private evaluatePosition(state: GameState): number {
+    let score = 0;
+    
+    // Material evaluation
+    score += this.evaluateMaterial(state.grid, state.currentPlayer) * this.EVAL_WEIGHTS.MATERIAL;
+    
+    // Positional evaluation
+    score += this.evaluatePosition_internal(state.grid, state.currentPlayer) * this.EVAL_WEIGHTS.POSITION;
+    
+    // Mobility evaluation
+    score += this.evaluateMobility(state) * this.EVAL_WEIGHTS.MOBILITY;
+    
+    // Safety evaluation
+    score += this.evaluateSafety(state.grid, state.currentPlayer) * this.EVAL_WEIGHTS.SAFETY;
+    
+    // Tempo evaluation
+    score += this.evaluateTempo(state.grid, state.currentPlayer) * this.EVAL_WEIGHTS.TEMPO;
+    
+    return score;
+  }
+
+  private evaluateMaterial(grid: GridCell[][], player: PLAYER): number {
+    const playerCells = countPlayerCells(grid, player);
+    const playerAtoms = countPlayerAtoms(grid, player);
+    
+    let opponentCells = 0;
+    let opponentAtoms = 0;
+    
+    for (const opponent of Object.values(PLAYER)) {
+      if (opponent !== player) {
+        opponentCells += countPlayerCells(grid, opponent);
+        opponentAtoms += countPlayerAtoms(grid, opponent);
+      }
+    }
+    
+    return (playerCells - opponentCells) + (playerAtoms - opponentAtoms) * 0.1;
+  }
+
+  private evaluatePosition_internal(grid: GridCell[][], player: PLAYER): number {
+    let positionScore = 0;
+    
+    for (let row = 0; row < grid.length; row++) {
+      for (let col = 0; col < grid[0].length; col++) {
+        if (grid[row][col].player === player) {
+          // Corner and edge bonuses
+          const isCorner = (row === 0 || row === grid.length - 1) && (col === 0 || col === grid[0].length - 1);
+          const isEdge = row === 0 || row === grid.length - 1 || col === 0 || col === grid[0].length - 1;
+          
+          if (isCorner) positionScore += 3;
+          else if (isEdge) positionScore += 2;
+          
+          // Central control bonus
+          const centerDistance = Math.abs(row - grid.length / 2) + Math.abs(col - grid[0].length / 2);
+          positionScore += Math.max(0, 5 - centerDistance);
+        }
+      }
+    }
+    
+    return positionScore;
+  }
+
+  private evaluateMobility(state: GameState): number {
+    const playerMoves = this.generateMoves(state).length;
+    
+    let opponentMoves = 0;
+    for (const opponent of Object.values(PLAYER)) {
+      if (opponent !== state.currentPlayer) {
+        const opponentState = { ...state, currentPlayer: opponent };
+        opponentMoves += this.generateMoves(opponentState).length;
+      }
+    }
+    
+    return playerMoves - opponentMoves * 0.5;
+  }
+
+  private evaluateSafety(grid: GridCell[][], player: PLAYER): number {
+    let safetyScore = 0;
+    
+    for (let row = 0; row < grid.length; row++) {
+      for (let col = 0; col < grid[0].length; col++) {
+        if (grid[row][col].player === player) {
+          const criticalMass = calculateCriticalMassForAI(grid, row, col);
+          const currentAtoms = grid[row][col].atoms;
+          
+          // Cells near critical mass are risky
+          if (currentAtoms >= criticalMass - 1) {
+            safetyScore -= 2;
+          }
+          
+          // Check for threats from adjacent opponent cells
+          const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+          for (const [dr, dc] of directions) {
+            const newRow = row + dr;
+            const newCol = col + dc;
+            
+            if (newRow >= 0 && newRow < grid.length && 
+                newCol >= 0 && newCol < grid[0].length) {
+              const adjCell = grid[newRow][newCol];
+              
+              if (adjCell.player !== null && adjCell.player !== player) {
+                const adjCritical = calculateCriticalMassForAI(grid, newRow, newCol);
+                if (adjCell.atoms >= adjCritical - 1) {
+                  safetyScore -= 3; // Immediate threat
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return safetyScore;
+  }
+
+  private evaluateTempo(grid: GridCell[][], player: PLAYER): number {
+    let tempoScore = 0;
+    
+    // Count cells that are one move away from explosion
+    for (let row = 0; row < grid.length; row++) {
+      for (let col = 0; col < grid[0].length; col++) {
+        if (grid[row][col].player === player) {
+          const criticalMass = calculateCriticalMassForAI(grid, row, col);
+          if (grid[row][col].atoms === criticalMass - 1) {
+            tempoScore += 2; // Ready to explode next turn
+          }
+        }
+      }
+    }
+    
+    return tempoScore;
+  }
+
+  private applyMove(grid: GridCell[][], row: number, col: number, player: PLAYER): GridCell[][] {
+    const result = simulateMove(grid, row, col, player);
+    return result.grid;
+  }
+
+  private generateMoves(state: GameState): AIMove[] {
+    const moves: AIMove[] = [];
+    
+    for (let row = 0; row < state.grid.length; row++) {
+      for (let col = 0; col < state.grid[0].length; col++) {
+        if (isValidMoveForAI(state.grid, row, col, state.currentPlayer, state.isBaseMode, state.hqs)) {
+          moves.push({ row, col, score: 0 });
+        }
+      }
+    }
+    
+    return moves;
+  }
+
+  private getNextPlayer(currentPlayer: PLAYER, grid: GridCell[][]): PLAYER {
+    const players = Object.values(PLAYER);
+    const activePlayers = players.filter(player => countPlayerCells(grid, player) > 0);
+    
+    if (activePlayers.length <= 1) return currentPlayer;
+    
+    const currentIndex = activePlayers.indexOf(currentPlayer);
+    return activePlayers[(currentIndex + 1) % activePlayers.length];
+  }
+}
+
+/**
+ * Main AI interface - chooses between strategies
  */
 export const getAIMove = (
   grid: GridCell[][],
   currentPlayer: PLAYER,
   isBaseMode: boolean = false,
   hqs?: HQCell[],
-  difficulty: AI_DIFFICULTY = AI_DIFFICULTY.MEDIUM
+  strategy: AI_STRATEGY = AI_STRATEGY.WEIGHTS_BASED
 ): AIMove | null => {
+  console.log(`🧠 AI (${strategy}) thinking for player ${currentPlayer}...`);
+  
   const validMoves: AIMove[] = [];
   
   // Find all valid moves
   for (let row = 0; row < grid.length; row++) {
     for (let col = 0; col < grid[row].length; col++) {
       if (isValidMoveForAI(grid, row, col, currentPlayer, isBaseMode, hqs)) {
-        const score = evaluateMove(grid, row, col, currentPlayer, isBaseMode, hqs, difficulty);
-        validMoves.push({ row, col, score });
+        validMoves.push({ row, col, score: 0 });
       }
     }
   }
   
   if (validMoves.length === 0) {
+    console.log(`❌ No valid moves found for player ${currentPlayer}`);
     return null;
   }
   
-  // Sort moves by score (highest first)
-  validMoves.sort((a, b) => b.score - a.score);
+  console.log(`🎯 Found ${validMoves.length} valid moves`);
   
-  let selectedMove: AIMove;
+  // Choose AI system
+  const aiSystem = strategy === AI_STRATEGY.WEIGHTS_BASED 
+    ? new WeightsBasedAI() 
+    : new MinimaxAI();
   
-  // Different selection strategies based on difficulty
-  switch (difficulty) {
-    case AI_DIFFICULTY.EASY:
-      // Random selection from top 50% of moves
-      const easyIndex = Math.floor(Math.random() * Math.max(1, Math.floor(validMoves.length / 2)));
-      selectedMove = validMoves[easyIndex];
-      break;
-      
-    case AI_DIFFICULTY.MEDIUM:
-      // Random selection from top 25% of moves
-      const mediumIndex = Math.floor(Math.random() * Math.max(1, Math.floor(validMoves.length / 4)));
-      selectedMove = validMoves[mediumIndex];
-      break;
-      
-    case AI_DIFFICULTY.HARD:
-    default:
-      // Hard AI uses advanced strategies based on the game situation
-      // Calculate the average score of all available moves
-      const avgScore = validMoves.reduce((sum, move) => sum + move.score, 0) / validMoves.length;
-      
-      // If there's a standout move with score significantly higher than average, always take it
-      if (validMoves.length > 1 && validMoves[0].score > avgScore * 2) {
-        selectedMove = validMoves[0]; // Take the clear best move
-      }
-      // If there's a move with score significantly higher than the next best, take it
-      else if (validMoves.length > 1 && validMoves[0].score > validMoves[1].score * 1.8) {
-        selectedMove = validMoves[0]; // Take the clearly better move
-      } 
-      // Occasionally choose from top 2 moves to add minimal unpredictability (only 5% of the time)
-      else if (validMoves.length >= 2 && Math.random() < 0.05) {
-        const topIndex = Math.floor(Math.random() * 2);
-        selectedMove = validMoves[topIndex];
-      }
-      // Almost always select the best move (95% of the time)
-      else {
-        selectedMove = validMoves[0];
-      }
-      break;
-  }
+  // Evaluate all moves
+  const evaluatedMoves: MoveEvaluation[] = validMoves.map(move => 
+    aiSystem.evaluateMove(grid, move.row, move.col, currentPlayer, isBaseMode, hqs)
+  );
   
-  return selectedMove;
+  // Sort by total score
+  evaluatedMoves.sort((a, b) => b.move.score - a.move.score);
+  
+  const bestMove = evaluatedMoves[0];
+  
+  console.log(`🎲 Best move: (${bestMove.move.row}, ${bestMove.move.col}) with score ${bestMove.move.score.toFixed(1)}`);
+  console.log(`📊 Breakdown - Immediate: ${bestMove.immediate.toFixed(1)}, Tactical: ${bestMove.tactical.toFixed(1)}, Strategic: ${bestMove.strategic.toFixed(1)}, Risk: ${bestMove.risk.toFixed(1)}, Chain: ${bestMove.chainReaction.toFixed(1)}`);
+  
+  return bestMove.move;
 };

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PLAYER, PLAYER_COLORS } from "../../lib/constants";
-import { AI_DIFFICULTY } from "../../lib/aiPlayer";
+import { AI_STRATEGY } from "../../lib/aiPlayer";
 import TutorialScreen from "./TutorialScreen";
 
 // Enum to represent player control type
@@ -15,7 +15,7 @@ export enum PLAYER_CONTROL {
 export type PlayerConfig = {
   player: PLAYER;
   control: PLAYER_CONTROL;
-  aiDifficulty?: AI_DIFFICULTY;
+  aiStrategy?: AI_STRATEGY;
 }
 
 // Create a store to save player selection
@@ -37,7 +37,7 @@ const createDefaultPlayerConfigs = (players: PLAYER[]): PlayerConfig[] => {
   return players.map(player => ({
     player,
     control: PLAYER_CONTROL.HUMAN, // Always human for all players in multiplayer
-    aiDifficulty: undefined
+    aiStrategy: undefined
   }));
 };
 
@@ -93,30 +93,30 @@ export const PlayerSettingsManager = {
     return playerConfig?.control === PLAYER_CONTROL.AI;
   },
   
-  // Get AI difficulty for a player
-  getAIDifficulty: (player: PLAYER): AI_DIFFICULTY => {
+  // Get AI strategy for a player
+  getAIStrategy: (player: PLAYER): AI_STRATEGY => {
     const settings = PlayerSettingsManager.getSettings();
     const playerConfig = settings.playerConfigs.find(config => config.player === player);
-    return playerConfig?.aiDifficulty || AI_DIFFICULTY.MEDIUM;
+    return playerConfig?.aiStrategy || AI_STRATEGY.WEIGHTS_BASED;
   },
   
   // Update a player's control type
-  setPlayerControl: (player: PLAYER, control: PLAYER_CONTROL, aiDifficulty?: AI_DIFFICULTY): void => {
+  setPlayerControl: (player: PLAYER, control: PLAYER_CONTROL, aiStrategy?: AI_STRATEGY): void => {
     const settings = PlayerSettingsManager.getSettings();
     
     // Find and update the player config
     const playerConfig = settings.playerConfigs.find(config => config.player === player);
     if (playerConfig) {
       playerConfig.control = control;
-      playerConfig.aiDifficulty = control === PLAYER_CONTROL.AI ? 
-        (aiDifficulty || AI_DIFFICULTY.MEDIUM) : undefined;
+      playerConfig.aiStrategy = control === PLAYER_CONTROL.AI ? 
+        (aiStrategy || AI_STRATEGY.WEIGHTS_BASED) : undefined;
     } else {
       // If player config doesn't exist, create it
       settings.playerConfigs.push({
         player,
         control,
-        aiDifficulty: control === PLAYER_CONTROL.AI ? 
-          (aiDifficulty || AI_DIFFICULTY.MEDIUM) : undefined
+        aiStrategy: control === PLAYER_CONTROL.AI ? 
+          (aiStrategy || AI_STRATEGY.WEIGHTS_BASED) : undefined
       });
     }
     
@@ -141,7 +141,7 @@ const MainMenu: React.FC = () => {
   const [menuScreen, setMenuScreen] = useState<'main' | 'mode' | 'singleplayer' | 'multiplayer' | 'tutorial' | 'tutorial-content'>('main');
   const [tutorialMode, setTutorialMode] = useState<'classic' | 'base-reaction'>('classic');
   const [selectedMode, setSelectedMode] = useState<'classic' | 'base-reaction'>('classic');
-  const [aiDifficulty, setAIDifficulty] = useState<AI_DIFFICULTY>(AI_DIFFICULTY.MEDIUM);
+  const [aiStrategy, setAIStrategy] = useState<AI_STRATEGY>(AI_STRATEGY.WEIGHTS_BASED);
   
   // Initialize number of players from existing settings
   const initialNumPlayers = (): 2 | 3 | 4 => {
@@ -170,7 +170,7 @@ const MainMenu: React.FC = () => {
       return {
         player,
         control: PLAYER_CONTROL.HUMAN,
-        aiDifficulty: undefined
+        aiStrategy: undefined
       };
     });
     
@@ -178,18 +178,18 @@ const MainMenu: React.FC = () => {
   };
   
   // Setup singleplayer game (human vs AI)
-  const setupSingleplayer = (difficulty: AI_DIFFICULTY) => {
+  const setupSingleplayer = (strategy: AI_STRATEGY) => {
     // Create a config with just 2 players (red human, blue AI)
     const singleplayerConfig = [
       {
         player: PLAYER.RED,
         control: PLAYER_CONTROL.HUMAN,
-        aiDifficulty: undefined
+        aiStrategy: undefined
       },
       {
         player: PLAYER.BLUE,
         control: PLAYER_CONTROL.AI,
-        aiDifficulty: difficulty
+        aiStrategy: strategy
       }
     ];
     
@@ -220,10 +220,10 @@ const MainMenu: React.FC = () => {
       
       if (currentControl === PLAYER_CONTROL.HUMAN) {
         updatedConfigs[playerIndex].control = PLAYER_CONTROL.AI;
-        updatedConfigs[playerIndex].aiDifficulty = aiDifficulty;
+        updatedConfigs[playerIndex].aiStrategy = aiStrategy;
       } else {
         updatedConfigs[playerIndex].control = PLAYER_CONTROL.HUMAN;
-        updatedConfigs[playerIndex].aiDifficulty = undefined;
+        updatedConfigs[playerIndex].aiStrategy = undefined;
       }
     }
     
@@ -375,38 +375,37 @@ const MainMenu: React.FC = () => {
           className="bg-black p-8 w-80"
         >
           <h2 className="text-2xl font-bold mb-2 text-center" style={{ fontFamily: 'Menlo, monospace' }}>
-            Select AI Difficulty
+            Select AI Strategy
           </h2>
+          <p className="text-sm text-gray-400 mb-4 text-center">
+            Choose between two advanced AI systems to challenge yourself
+          </p>
           
           <div className="grid grid-cols-1 gap-4 mb-6">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setupSingleplayer(AI_DIFFICULTY.EASY)}
+              onClick={() => setupSingleplayer(AI_STRATEGY.WEIGHTS_BASED)}
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
-              Easy
+              <div className="text-left">
+                <div className="font-bold">Weights-Based AI</div>
+                <div className="text-xs text-gray-300">Strategic evaluation system</div>
+              </div>
             </motion.button>
             
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setupSingleplayer(AI_DIFFICULTY.MEDIUM)}
+              onClick={() => setupSingleplayer(AI_STRATEGY.MINIMAX)}
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
-              Medium
-            </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setupSingleplayer(AI_DIFFICULTY.HARD)}
-              className={`${buttonStyle.base} ${buttonStyle.primary}`}
-              style={{ fontFamily: 'Menlo, monospace' }}
-            >
-              Hard
+              <div className="text-left">
+                <div className="font-bold">Minimax AI</div>
+                <div className="text-xs text-gray-300">Game tree search algorithm</div>
+              </div>
             </motion.button>
           </div>
           
@@ -513,6 +512,38 @@ const MainMenu: React.FC = () => {
             </div>
           </div>
           
+          <div className="mb-4 md:mb-6">
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>AI Strategy</h3>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setAIStrategy(AI_STRATEGY.WEIGHTS_BASED)}
+                className={`h-10 px-3 rounded-lg border border-white text-sm transition-all duration-100 flex items-center justify-center ${
+                  aiStrategy === AI_STRATEGY.WEIGHTS_BASED
+                    ? 'bg-white text-black'
+                    : 'bg-black hover:bg-gray-800 text-white'
+                }`}
+                style={{ fontFamily: 'Menlo, monospace' }}
+              >
+                Weights
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setAIStrategy(AI_STRATEGY.MINIMAX)}
+                className={`h-10 px-3 rounded-lg border border-white text-sm transition-all duration-100 flex items-center justify-center ${
+                  aiStrategy === AI_STRATEGY.MINIMAX
+                    ? 'bg-white text-black'
+                    : 'bg-black hover:bg-gray-800 text-white'
+                }`}
+                style={{ fontFamily: 'Menlo, monospace' }}
+              >
+                Minimax
+              </motion.button>
+            </div>
+          </div>
+
           <div className="mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 justify-items-center">

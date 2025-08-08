@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { PLAYER } from './constants';
 import { useChainReaction } from './stores/useChainReaction';
 import { PlayerSettingsManager, PLAYER_CONTROL } from '../components/Menu/MainMenu';
-import { getAIMove } from './aiPlayer';
+import { getAIMove, AI_STRATEGY } from './aiPlayer';
 
 /**
  * A React hook to process AI turns
@@ -32,12 +32,12 @@ export const useAITurn = () => {
       
       // Add a small delay to make the AI move feel more natural
       const timeoutId = setTimeout(() => {
-        // Get the AI's move
-        const difficulty = PlayerSettingsManager.getAIDifficulty(currentPlayer);
-        const aiMove = getAIMove(grid, currentPlayer, isBaseMode, hqs, difficulty);
+        // Get the AI's strategy (default to weights-based for now)
+        const strategy = PlayerSettingsManager.getAIStrategy(currentPlayer);
+        const aiMove = getAIMove(grid, currentPlayer, isBaseMode, hqs, strategy);
         
         if (aiMove) {
-          console.log(`AI ${currentPlayer} (${difficulty}) placed dot at (${aiMove.row}, ${aiMove.col})`);
+          console.log(`AI ${currentPlayer} (${strategy}) placed dot at (${aiMove.row}, ${aiMove.col}) with score ${aiMove.score.toFixed(1)}`);
           placeDot(aiMove.row, aiMove.col);
         } else {
           console.warn(`AI ${currentPlayer} couldn't find a valid move`);
