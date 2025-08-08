@@ -517,32 +517,6 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         
         // Remove the power-up after use
         newPowerUps.splice(powerUpIndex, 1);
-        
-        // Check if we should trigger heart selection mode after diamond activation
-        try {
-          const settings = PlayerSettingsManager.getSettings();
-          const numPlayers = settings.numberOfPlayers || 2;
-          const ownHQ = newHqs.find(hq => hq.player === currentPlayer);
-          
-          if (numPlayers >= 3 && ownHQ && ownHQ.health >= 5) {
-            // Player has max health, allow them to choose enemy to damage (same as heart logic)
-            console.log("Diamond power-up triggered heart selection mode for max health player");
-            
-            set(state => ({
-              ...state,
-              heartSelectionMode: true,
-              pendingHeartPlayer: currentPlayer,
-              powerUps: newPowerUps,
-              grid: newGrid,
-              hqs: newHqs
-            }));
-            
-            // Don't continue with normal flow - return early to wait for target selection
-            return state;
-          }
-        } catch (error) {
-          console.error("Error checking heart selection mode after diamond:", error);
-        }
       } else if (powerUp && powerUp.type === 'heart') {
         // Check number of players to determine power-up behavior
         try {
@@ -691,14 +665,22 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                   const deadHQs = newHqs.filter(hq => hq.health <= 0);
                   
                   // Clear all dots from the board for players whose HQ was destroyed
+                  // Also remove the HQs from the array so they don't keep rendering
                   deadHQs.forEach(deadHQ => {
-                    console.log(`Clearing all dots for defeated player: ${deadHQ.player}`);
+                    console.log(`Clearing all dots and removing HQ for defeated player: ${deadHQ.player}`);
                     for (let r = 0; r < newGrid.length; r++) {
                       for (let c = 0; c < newGrid[r].length; c++) {
                         if (newGrid[r][c].player === deadHQ.player) {
                           newGrid[r][c] = { atoms: 0, player: null };
                         }
                       }
+                    }
+                    
+                    // Remove the dead HQ from the HQs array to prevent re-rendering
+                    const hqIndex = newHqs.findIndex(hq => hq.row === deadHQ.row && hq.col === deadHQ.col && hq.player === deadHQ.player);
+                    if (hqIndex !== -1) {
+                      newHqs.splice(hqIndex, 1);
+                      console.log(`Removed HQ at (${deadHQ.row}, ${deadHQ.col}) for player ${deadHQ.player}`);
                     }
                   });
                   
@@ -929,9 +911,6 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                       if (targetHQ.health <= 0) {
                         console.log(`HQ DESTROYED at (${targetHQ.row}, ${targetHQ.col})!`);
                         
-                        // Set health to 0 to immediately hide the HQ base
-                        targetHQ.health = 0;
-                        
                         // Trigger violent destruction animation
                         set(state => ({
                           ...state,
@@ -944,12 +923,13 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                           }
                         }));
                         
-                        // Remove HQ from the list immediately to prevent ghost HQ behavior
-                        const hqIndex = newHqs.findIndex(hq => hq.row === targetHQ.row && hq.col === targetHQ.col);
-                        if (hqIndex !== -1) {
-                          newHqs.splice(hqIndex, 1);
-                          console.log(`HQ immediately removed from board at (${targetHQ.row}, ${targetHQ.col})`);
-                        }
+                        // Remove HQ from the list after a delay to allow animation
+                        setTimeout(() => {
+                          set(state => ({
+                            hqs: state.hqs.filter(hq => !(hq.row === targetHQ.row && hq.col === targetHQ.col))
+                          }));
+                          console.log(`HQ removed from board at (${targetHQ.row}, ${targetHQ.col})`);
+                        }, 1500); // Wait for destruction animation to complete
                         
                       } else {
                         // Regular damage animation

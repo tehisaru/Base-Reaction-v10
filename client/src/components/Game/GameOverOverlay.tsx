@@ -39,8 +39,8 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
           <p className="text-2xl font-bold" style={{ fontFamily: 'Menlo, monospace' }}>
             {winner === PLAYER.RED ? "Red" : 
              winner === PLAYER.BLUE ? "Blue" : 
-             winner === PLAYER.GREEN ? "Green" :
-             winner === PLAYER.YELLOW ? "Yellow" : "Player"} wins!
+             winner === PLAYER.BLACK ? "Black" : 
+             winner === PLAYER.VIOLET ? "Yellow" : "Player"} wins!
           </p>
         </div>
         
