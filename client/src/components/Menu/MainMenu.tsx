@@ -390,21 +390,8 @@ const MainMenu: React.FC = () => {
               style={{ fontFamily: 'Menlo, monospace' }}
             >
               <div className="text-left">
-                <div className="font-bold">Weights-Based AI</div>
-                <div className="text-xs text-gray-300">Strategic evaluation system</div>
-              </div>
-            </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setupSingleplayer(AI_STRATEGY.MINIMAX)}
-              className={`${buttonStyle.base} ${buttonStyle.primary}`}
-              style={{ fontFamily: 'Menlo, monospace' }}
-            >
-              <div className="text-left">
-                <div className="font-bold">Minimax AI</div>
-                <div className="text-xs text-gray-300">Game tree search algorithm</div>
+                <div className="font-bold">Play vs AI</div>
+                <div className="text-xs text-gray-300">Strategic AI opponent</div>
               </div>
             </motion.button>
           </div>
@@ -512,37 +499,7 @@ const MainMenu: React.FC = () => {
             </div>
           </div>
           
-          <div className="mb-4 md:mb-6">
-            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>AI Strategy</h3>
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setAIStrategy(AI_STRATEGY.WEIGHTS_BASED)}
-                className={`h-10 px-3 rounded-lg border border-white text-sm transition-all duration-100 flex items-center justify-center ${
-                  aiStrategy === AI_STRATEGY.WEIGHTS_BASED
-                    ? 'bg-white text-black'
-                    : 'bg-black hover:bg-gray-800 text-white'
-                }`}
-                style={{ fontFamily: 'Menlo, monospace' }}
-              >
-                Weights
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setAIStrategy(AI_STRATEGY.MINIMAX)}
-                className={`h-10 px-3 rounded-lg border border-white text-sm transition-all duration-100 flex items-center justify-center ${
-                  aiStrategy === AI_STRATEGY.MINIMAX
-                    ? 'bg-white text-black'
-                    : 'bg-black hover:bg-gray-800 text-white'
-                }`}
-                style={{ fontFamily: 'Menlo, monospace' }}
-              >
-                Minimax
-              </motion.button>
-            </div>
-          </div>
+
 
           <div className="mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>

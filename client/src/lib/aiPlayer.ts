@@ -3,8 +3,7 @@ import { GridCell, HQCell } from './stores/useChainReaction';
 import { calculateCriticalMass, isAdjacentTo } from './gameUtils';
 
 export enum AI_STRATEGY {
-  WEIGHTS_BASED = 'weights',
-  MINIMAX = 'minimax'
+  WEIGHTS_BASED = 'weights'
 }
 
 interface AIMove {
@@ -786,10 +785,8 @@ export const getAIMove = (
   
   console.log(`🎯 Found ${validMoves.length} valid moves`);
   
-  // Choose AI system
-  const aiSystem = strategy === AI_STRATEGY.WEIGHTS_BASED 
-    ? new WeightsBasedAI() 
-    : new MinimaxAI();
+  // Use only Weights-Based AI
+  const aiSystem = new WeightsBasedAI();
   
   // Evaluate all moves
   const evaluatedMoves: MoveEvaluation[] = validMoves.map(move => 

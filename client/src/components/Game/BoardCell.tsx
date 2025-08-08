@@ -181,7 +181,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
           </div>
         )}
 
-      {/* HQ base with proper glow effect - only show if health > 0 */}
+      {/* HQ base circle - only show if health > 0 */}
       {isHQ && hqHealth !== undefined && hqHealth > 0 && (
         <div className="absolute inset-0 flex items-center justify-center"
           style={{ 
@@ -189,7 +189,7 @@ const BoardCell: React.FC<BoardCellProps> = ({
           }}
         >
           <motion.div 
-            className="rounded-full flex items-center justify-center relative"
+            className="rounded-full flex items-center justify-center"
             initial={{ scale: 1.3 }}
             animate={(isHQDamaged || isHQHealed) ? {
               scale: [1.3, 1.5, 1.3]
@@ -207,19 +207,6 @@ const BoardCell: React.FC<BoardCellProps> = ({
               zIndex: 25
             }}
           >
-            {/* Glow layers - multiple box-shadows for strong glow effect */}
-            <div 
-              className="absolute inset-0 rounded-full"
-              style={{
-                boxShadow: `
-                  0 0 ${8 + hqHealth * 4}px ${PLAYER_COLORS[cell.player!]},
-                  0 0 ${16 + hqHealth * 8}px ${PLAYER_COLORS[cell.player!]}aa,
-                  0 0 ${24 + hqHealth * 12}px ${PLAYER_COLORS[cell.player!]}66,
-                  inset 0 0 ${4 + hqHealth * 2}px ${PLAYER_COLORS[cell.player!]}33
-                `,
-                animation: 'pulse 2s infinite ease-in-out'
-              }}
-            />
           </motion.div>
           
           <AnimatePresence>
@@ -443,6 +430,31 @@ const BoardCell: React.FC<BoardCellProps> = ({
           }}
         >
           {hqHealth}
+        </div>
+      )}
+
+      {/* HQ Glow effect - rendered last to appear on top */}
+      {isHQ && hqHealth !== undefined && hqHealth > 0 && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ 
+            padding: '2px',
+            zIndex: 35
+          }}
+        >
+          <div 
+            className="rounded-full"
+            style={{
+              width: '80%', 
+              height: '80%',
+              boxShadow: `
+                0 0 ${8 + hqHealth * 4}px ${PLAYER_COLORS[cell.player!]},
+                0 0 ${16 + hqHealth * 8}px ${PLAYER_COLORS[cell.player!]}aa,
+                0 0 ${24 + hqHealth * 12}px ${PLAYER_COLORS[cell.player!]}66,
+                0 0 ${32 + hqHealth * 16}px ${PLAYER_COLORS[cell.player!]}44
+              `,
+              animation: 'pulse 2s infinite ease-in-out'
+            }}
+          />
         </div>
       )}
       
