@@ -181,21 +181,20 @@ const BoardCell: React.FC<BoardCellProps> = ({
           </div>
         )}
 
-      {/* HQ base as a big circle - no drop shadows for flat design - only show if health > 0 */}
+      {/* HQ base with proper glow effect - only show if health > 0 */}
       {isHQ && hqHealth !== undefined && hqHealth > 0 && (
         <div className="absolute inset-0 flex items-center justify-center"
           style={{ 
-            padding: '2px' // Add padding to make space for the circle
+            padding: '2px'
           }}
         >
           <motion.div 
-            className="rounded-full flex items-center justify-center"
-            initial={{ scale: 1.3 }} // Start already scaled
+            className="rounded-full flex items-center justify-center relative"
+            initial={{ scale: 1.3 }}
             animate={(isHQDamaged || isHQHealed) ? {
-              scale: [1.3, 1.5, 1.3], // Pulse from already scaled size
-              // Removed boxShadow animation for flat design
+              scale: [1.3, 1.5, 1.3]
             } : {
-              scale: 1.3 // Keep steady size
+              scale: 1.3
             }}
             transition={{ 
               duration: 0.5,
@@ -204,15 +203,23 @@ const BoardCell: React.FC<BoardCellProps> = ({
             style={{
               width: '80%', 
               height: '80%',
-              backgroundColor: PLAYER_COLORS[cell.player!], // Fully opaque background
-              transition: "all 0.8s ease", // Match background transition speed
-              boxShadow: `0 0 ${Math.max(5, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}${Math.floor(hqHealth / 5 * 255).toString(16).padStart(2, '0')}`, // Glow based on health
-              zIndex: 25 // Ensure HQ base appears above other elements but below health number
+              backgroundColor: PLAYER_COLORS[cell.player!],
+              zIndex: 25
             }}
           >
-            <span className="text-xl font-bold text-white">
-              {hqHealth}
-            </span>
+            {/* Glow layers - multiple box-shadows for strong glow effect */}
+            <div 
+              className="absolute inset-0 rounded-full"
+              style={{
+                boxShadow: `
+                  0 0 ${8 + hqHealth * 4}px ${PLAYER_COLORS[cell.player!]},
+                  0 0 ${16 + hqHealth * 8}px ${PLAYER_COLORS[cell.player!]}aa,
+                  0 0 ${24 + hqHealth * 12}px ${PLAYER_COLORS[cell.player!]}66,
+                  inset 0 0 ${4 + hqHealth * 2}px ${PLAYER_COLORS[cell.player!]}33
+                `,
+                animation: 'pulse 2s infinite ease-in-out'
+              }}
+            />
           </motion.div>
           
           <AnimatePresence>
@@ -429,10 +436,10 @@ const BoardCell: React.FC<BoardCellProps> = ({
       {/* Health number with strong contrast - highest z-index */}
       {isHQ && hqHealth !== undefined && (
         <div 
-          className="absolute inset-0 flex items-center justify-center pointer-events-none text-white font-bold text-lg"
+          className="absolute inset-0 flex items-center justify-center pointer-events-none text-white font-bold text-xl"
           style={{
-            textShadow: "2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(0,0,0,0.8), 1px -1px 2px rgba(0,0,0,0.8), -1px 1px 2px rgba(0,0,0,0.8)",
-            zIndex: 30 // Ensure health number is always on top of everything
+            textShadow: "2px 2px 4px rgba(0,0,0,0.9), -2px -2px 4px rgba(0,0,0,0.9), 2px -2px 4px rgba(0,0,0,0.9), -2px 2px 4px rgba(0,0,0,0.9)",
+            zIndex: 30
           }}
         >
           {hqHealth}
