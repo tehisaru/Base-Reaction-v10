@@ -89,34 +89,49 @@ const BoardCell: React.FC<BoardCellProps> = ({
   }, [aboutToExplode, cell.atoms]);
 
   return (
-    <div
-      ref={cellRef}
-      className="relative"
-      style={{
-        width: CELL_SIZE,
-        height: CELL_SIZE,
-        cursor: (isValidMove || isHeartTarget) ? "pointer" : "not-allowed",
-        backgroundColor: isHQ 
-          ? `${PLAYER_COLORS[cell.player!]}66` // 40% opacity of player color for HQ
-          : "rgba(255, 255, 255, 0.1)", // Slightly visible white background
-        boxShadow: isHQ && hqHealth !== undefined && hqHealth > 0
-          ? isHeartTarget 
-            ? `0 0 30px #ff0000, 0 0 50px #ff0000` // Strong red glow for heart targets
-            : `0 0 ${Math.max(10, hqHealth * 8)}px ${PLAYER_COLORS[cell.player!]}, 0 0 ${Math.max(20, hqHealth * 12)}px ${PLAYER_COLORS[cell.player!]}` // Strong dual-layer glow
-          : "none",
-        border: "none", // Remove border for completely flat look
-        margin: "1px",
-        transition: "all 0.3s ease" // Match the background transition speed
-      }}
-      onClick={() => {
-        if (isValidMove || isHeartTarget) {
-          onCellClick(row, col);
-        }
-      }}
-    >
-      {/* Power-up icon if present - completely flat with same transition speed and strong green glow */}
-      {powerUpType && cell.atoms === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center"
+    <div className="relative" style={{ width: CELL_SIZE, height: CELL_SIZE }}>
+      {/* Glow effect layer - rendered first to be behind everything */}
+      {isHQ && hqHealth !== undefined && hqHealth > 0 && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isHeartTarget 
+              ? `radial-gradient(circle, rgba(255,0,0,0.4) 0%, rgba(255,0,0,0.2) 50%, transparent 100%)`
+              : `radial-gradient(circle, ${PLAYER_COLORS[cell.player!]}66 0%, ${PLAYER_COLORS[cell.player!]}33 50%, transparent 100%)`,
+            filter: isHeartTarget 
+              ? `drop-shadow(0 0 30px #ff0000) drop-shadow(0 0 50px #ff0000)`
+              : `drop-shadow(0 0 ${Math.max(10, hqHealth * 8)}px ${PLAYER_COLORS[cell.player!]}) drop-shadow(0 0 ${Math.max(20, hqHealth * 12)}px ${PLAYER_COLORS[cell.player!]})`,
+            transition: "all 0.3s ease",
+            zIndex: 1
+          }}
+        />
+      )}
+      
+      {/* Main cell content */}
+      <div
+        ref={cellRef}
+        className="relative"
+        style={{
+          width: CELL_SIZE,
+          height: CELL_SIZE,
+          cursor: (isValidMove || isHeartTarget) ? "pointer" : "not-allowed",
+          backgroundColor: isHQ 
+            ? `${PLAYER_COLORS[cell.player!]}66` // 40% opacity of player color for HQ
+            : "rgba(255, 255, 255, 0.1)", // Slightly visible white background
+          border: "none", // Remove border for completely flat look
+          margin: "1px",
+          transition: "all 0.3s ease", // Match the background transition speed
+          zIndex: 2
+        }}
+        onClick={() => {
+          if (isValidMove || isHeartTarget) {
+            onCellClick(row, col);
+          }
+        }}
+      >
+        {/* Power-up icon if present - completely flat with same transition speed and strong green glow */}
+        {powerUpType && cell.atoms === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center"
           style={{ 
             transition: "all 0.3s ease", // Match the background transition speed
             overflow: "visible", // Allow glow to extend beyond boundaries
@@ -163,8 +178,8 @@ const BoardCell: React.FC<BoardCellProps> = ({
               </svg>
             </div>
           )}
-        </div>
-      )}
+          </div>
+        )}
 
       {/* HQ base as a big circle - no drop shadows for flat design - only show if health > 0 */}
       {isHQ && hqHealth !== undefined && hqHealth > 0 && (
@@ -191,7 +206,8 @@ const BoardCell: React.FC<BoardCellProps> = ({
               height: '80%',
               backgroundColor: PLAYER_COLORS[cell.player!], // Fully opaque background
               transition: "all 0.8s ease", // Match background transition speed
-              boxShadow: `0 0 ${Math.max(5, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}${Math.floor(hqHealth / 5 * 255).toString(16).padStart(2, '0')}` // Glow based on health
+              boxShadow: `0 0 ${Math.max(5, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}${Math.floor(hqHealth / 5 * 255).toString(16).padStart(2, '0')}`, // Glow based on health
+              zIndex: 25 // Ensure HQ base appears above other elements but below health number
             }}
           >
             <span className="text-xl font-bold text-white">
@@ -409,6 +425,21 @@ const BoardCell: React.FC<BoardCellProps> = ({
           </div>
         )}
       </AnimatePresence>
+      
+      {/* Health number with strong contrast - highest z-index */}
+      {isHQ && hqHealth !== undefined && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center pointer-events-none text-white font-bold text-lg"
+          style={{
+            textShadow: "2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(0,0,0,0.8), 1px -1px 2px rgba(0,0,0,0.8), -1px 1px 2px rgba(0,0,0,0.8)",
+            zIndex: 30 // Ensure health number is always on top of everything
+          }}
+        >
+          {hqHealth}
+        </div>
+      )}
+      
+      </div>
     </div>
   );
 };

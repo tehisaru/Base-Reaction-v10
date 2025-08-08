@@ -24,9 +24,10 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
             <section>
               <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>How to Play</h2>
               <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
-                <li>Click empty cells or your own colored cells to add dots</li>
-                <li>When cells get too full, they explode and spread to neighbors</li>
                 <li>Win by being the only player with dots remaining</li>
+                <li>Click empty cells or your own colored cells to add dots</li>
+                <li>When cells get too full, they explode and spread to neighbors, creating chain reactions</li>
+                
               </ul>
             </section>
             
@@ -39,40 +40,28 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
               </ul>
             </section>
             
-            <section>
-              <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>Key Strategy</h2>
-              <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
-                <li>Corners explode fastest - use them for quick attacks</li>
-                <li>Watch for chain reactions that can clear the board</li>
-                <li>Sometimes building up your position is better than attacking</li>
-              </ul>
-            </section>
+
           </div>
         ) : (
           <div className="space-y-4">
             <section>
               <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>How to Play</h2>
               <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
-                <li>Destroy enemy headquarters by reducing their health to zero</li>
-                <li>You can only place dots near your HQ or next to your existing dots</li>
+                <li>Win by being the last player with an HQ</li>
+                <li>You can only place dots near your HQ, on the line that your HQ is on or next to your existing dots</li>
                 <li>Exploding next to enemy HQs damages them</li>
-              </ul>
-            </section>
-            
-            <section>
-              <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>HQ Bases</h2>
-              <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
-                <li>Each player starts with an HQ that has 5 health</li>
-                <li>HQs glow brighter when healthy, dimmer when damaged</li>
-                <li>Protect your HQ while attacking enemy HQs</li>
               </ul>
             </section>
             
             <section>
               <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>Power-ups</h2>
               <ul className="list-disc pl-6 space-y-1" style={typewriterFont}>
-                <li><strong>Heart (♥):</strong> Heal your HQ or damage an enemy HQ</li>
-                <li><strong>Diamond (♦):</strong> Spreads your dots to nearby empty cells</li>
+                <li>
+                  <strong>Diamond:</strong> When a player places a dot on a diamond, a 3×3 grid of cells centered on the diamond gets one dot of the player's color added to each cell (only applies to empty cells or cells with the player's color).
+                </li>
+                <li>
+                  <strong>Heart:</strong> The player's HQ gains one life (up to a maximum of 5). In 3-4 player games, hearts never damage enemy HQs.
+                </li>
               </ul>
             </section>
           </div>

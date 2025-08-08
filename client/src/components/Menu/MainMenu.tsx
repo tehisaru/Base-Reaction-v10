@@ -488,11 +488,11 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-8 w-[90%] max-w-lg"
+          className="bg-black p-3 md:p-8 w-[90%] sm:w-[80%] max-w-sm md:max-w-md mx-auto"
         >
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-3" style={{ fontFamily: 'Menlo, monospace' }}>Number of Players</h3>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="mb-4 md:mb-6">
+            <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3" style={{ fontFamily: 'Menlo, monospace' }}>Number of Players</h3>
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
               {[2, 3, 4].map((num) => (
                 <motion.button
                   key={num}
@@ -500,7 +500,7 @@ const MainMenu: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.1 }}
                   onClick={() => handleNumPlayersChange(num as 2 | 3 | 4)}
-                  className={`h-14 px-6 rounded-xl border-2 border-white text-xl transition-all duration-100 flex items-center justify-center ${
+                  className={`h-12 md:h-14 px-3 md:px-6 rounded-xl border-2 border-white text-lg md:text-xl transition-all duration-100 flex items-center justify-center ${
                     numPlayers === num 
                       ? 'bg-white text-black hover:bg-gray-200'
                       : 'bg-black hover:bg-gray-800 text-white'
@@ -513,13 +513,13 @@ const MainMenu: React.FC = () => {
             </div>
           </div>
           
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
-            <div className="flex justify-center gap-4">
+          <div className="mb-4 md:mb-6">
+            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 justify-items-center">
               {playerConfigs.map((config) => (
                 <motion.div 
                   key={config.player} 
-                  className={`w-16 h-16 rounded-full cursor-pointer relative ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
+                  className={`w-14 h-14 md:w-16 md:h-16 rounded-full cursor-pointer relative ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
                   style={{ 
                     backgroundColor: PLAYER_COLORS[config.player]
                   }}

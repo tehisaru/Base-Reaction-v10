@@ -665,14 +665,22 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                   const deadHQs = newHqs.filter(hq => hq.health <= 0);
                   
                   // Clear all dots from the board for players whose HQ was destroyed
+                  // Also remove the HQs from the array so they don't keep rendering
                   deadHQs.forEach(deadHQ => {
-                    console.log(`Clearing all dots for defeated player: ${deadHQ.player}`);
+                    console.log(`Clearing all dots and removing HQ for defeated player: ${deadHQ.player}`);
                     for (let r = 0; r < newGrid.length; r++) {
                       for (let c = 0; c < newGrid[r].length; c++) {
                         if (newGrid[r][c].player === deadHQ.player) {
                           newGrid[r][c] = { atoms: 0, player: null };
                         }
                       }
+                    }
+                    
+                    // Remove the dead HQ from the HQs array to prevent re-rendering
+                    const hqIndex = newHqs.findIndex(hq => hq.row === deadHQ.row && hq.col === deadHQ.col && hq.player === deadHQ.player);
+                    if (hqIndex !== -1) {
+                      newHqs.splice(hqIndex, 1);
+                      console.log(`Removed HQ at (${deadHQ.row}, ${deadHQ.col}) for player ${deadHQ.player}`);
                     }
                   });
                   
