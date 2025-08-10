@@ -33,6 +33,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 }) => {
   const [lastClickedCell, setLastClickedCell] = useState<{row: number, col: number} | null>(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [scale, setScale] = useState(1);
   const { playHit } = useAudio();
   const { lastHQDamaged, heartSelectionMode, selectHeartTarget, pendingHeartPlayer } = useChainReaction();
   
@@ -41,6 +42,28 @@ const GameBoard: React.FC<GameBoardProps> = ({
     // Start animation immediately
     setGameStarted(true);
   }, []);
+
+  // Calculate responsive scale based on viewport
+  useEffect(() => {
+    const calculateScale = () => {
+      const boardWidth = cols * CELL_SIZE + cols * 2 + 24;
+      const boardHeight = rows * CELL_SIZE + rows * 2 + 24;
+      
+      const availableWidth = window.innerWidth - 32; // Account for padding
+      const availableHeight = window.innerHeight - 200; // Account for UI elements
+      
+      const scaleX = availableWidth / boardWidth;
+      const scaleY = availableHeight / boardHeight;
+      
+      // Use the smaller scale to ensure the board fits, but cap at 1 to avoid upscaling
+      const newScale = Math.min(scaleX, scaleY, 1);
+      setScale(newScale);
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, [rows, cols]);
   
   // Handle cell click with animation tracking
   const handleCellClick = (row: number, col: number) => {
@@ -131,17 +154,18 @@ const GameBoard: React.FC<GameBoardProps> = ({
       )}
       
       <motion.div 
-        className="flex flex-col items-center justify-center p-2 md:p-6 rounded-xl md:rounded-2xl scale-[0.65] sm:scale-75 md:scale-90 lg:scale-100"
+        className="flex flex-col items-center justify-center p-1 sm:p-2 md:p-6 rounded-xl md:rounded-2xl"
         initial="hidden"
         animate={gameStarted ? "visible" : "hidden"}
         variants={boardContainerVariants}
         style={{ 
-          width: cols * CELL_SIZE + cols * 2 + 24, // Account for borders and padding
-          height: rows * CELL_SIZE + rows * 2 + 24,
+          width: cols * CELL_SIZE + cols * 2 + 24, // Fixed width
+          height: rows * CELL_SIZE + rows * 2 + 24, // Fixed height
           background: "rgba(255, 255, 255, 0.05)",
           border: "none", // Remove border for completely flat look
           boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)", // Add constant glow to board edges
-          transformOrigin: 'center'
+          transformOrigin: 'center',
+          transform: `scale(${scale})` // Apply responsive scale
         }}
       >
       {grid.map((rowCells, rowIndex) => (

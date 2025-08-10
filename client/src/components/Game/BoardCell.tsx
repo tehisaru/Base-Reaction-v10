@@ -418,30 +418,93 @@ const BoardCell: React.FC<BoardCellProps> = ({
         </div>
       )}
 
-      {/* HQ Glow effect - rendered last to appear on top */}
+      {/* HQ Glow effect - 5 animation layers with decreasing intensity based on health */}
       {isHQ && hqHealth !== undefined && hqHealth > 0 && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ 
-            padding: '2px',
-            zIndex: 35
-          }}
-        >
-          <div 
-            className="rounded-full"
-            style={{
-              width: '80%', 
-              height: '80%',
-              backgroundColor: 'transparent',
-              border: '1px solid transparent',
-              boxShadow: `
-                0 0 ${8 + hqHealth * 4}px ${PLAYER_COLORS[cell.player!]},
-                0 0 ${16 + hqHealth * 8}px ${PLAYER_COLORS[cell.player!]}aa,
-                0 0 ${24 + hqHealth * 12}px ${PLAYER_COLORS[cell.player!]}66,
-                0 0 ${32 + hqHealth * 16}px ${PLAYER_COLORS[cell.player!]}44
-              `
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 35 }}>
+          {/* Layer 1 - Innermost, very bright, thin */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                `0 0 ${Math.max(2, hqHealth * 2)}px ${PLAYER_COLORS[cell.player!]}`,
+                `0 0 ${Math.max(4, hqHealth * 4)}px ${PLAYER_COLORS[cell.player!]}`,
+                `0 0 ${Math.max(2, hqHealth * 2)}px ${PLAYER_COLORS[cell.player!]}`
+              ]
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut"
             }}
           />
-
+          {/* Layer 2 - Second layer, medium brightness */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                `0 0 ${Math.max(4, hqHealth * 4)}px ${PLAYER_COLORS[cell.player!]}99`,
+                `0 0 ${Math.max(8, hqHealth * 8)}px ${PLAYER_COLORS[cell.player!]}99`,
+                `0 0 ${Math.max(4, hqHealth * 4)}px ${PLAYER_COLORS[cell.player!]}99`
+              ]
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.3
+            }}
+          />
+          {/* Layer 3 - Third layer, lower brightness */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                `0 0 ${Math.max(6, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}77`,
+                `0 0 ${Math.max(12, hqHealth * 12)}px ${PLAYER_COLORS[cell.player!]}77`,
+                `0 0 ${Math.max(6, hqHealth * 6)}px ${PLAYER_COLORS[cell.player!]}77`
+              ]
+            }}
+            transition={{
+              duration: 2.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.6
+            }}
+          />
+          {/* Layer 4 - Fourth layer, subtle */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                `0 0 ${Math.max(8, hqHealth * 8)}px ${PLAYER_COLORS[cell.player!]}55`,
+                `0 0 ${Math.max(16, hqHealth * 16)}px ${PLAYER_COLORS[cell.player!]}55`,
+                `0 0 ${Math.max(8, hqHealth * 8)}px ${PLAYER_COLORS[cell.player!]}55`
+              ]
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.9
+            }}
+          />
+          {/* Layer 5 - Outermost layer, very subtle */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              boxShadow: [
+                `0 0 ${Math.max(10, hqHealth * 10)}px ${PLAYER_COLORS[cell.player!]}33`,
+                `0 0 ${Math.max(20, hqHealth * 20)}px ${PLAYER_COLORS[cell.player!]}33`,
+                `0 0 ${Math.max(10, hqHealth * 10)}px ${PLAYER_COLORS[cell.player!]}33`
+              ]
+            }}
+            transition={{
+              duration: 3.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 1.2
+            }}
+          />
         </div>
       )}
       

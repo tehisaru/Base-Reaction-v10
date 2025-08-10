@@ -519,6 +519,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         newPowerUps.splice(powerUpIndex, 1);
       } else if (powerUp && powerUp.type === 'heart') {
         // Check number of players to determine power-up behavior
+        let heartAnimationEffect = null;
         try {
           const settings = PlayerSettingsManager.getSettings();
           const numPlayers = settings.numberOfPlayers || 2;
@@ -539,7 +540,9 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                 ...state,
                 heartSelectionMode: true,
                 pendingHeartPlayer: currentPlayer,
-                powerUps: newPowerUps
+                powerUps: newPowerUps,
+                grid: newGrid,
+                hqs: newHqs
               }));
               
               // Don't continue with normal flow - return early to wait for target selection
@@ -549,17 +552,14 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
               console.log("Heart power-up in 3+ player game: just adding health to own HQ");
               ownHQ.health += 1;
               
-              // Trigger healing animation effect
-              set(state => ({
-                ...state,
-                lastHQDamaged: { 
-                  row: ownHQ.row, 
-                  col: ownHQ.col, 
-                  player: ownHQ.player,
-                  timestamp: Date.now(),
-                  type: 'heal' // Mark this as a heal effect
-                }
-              }));
+              // Set healing animation effect to be applied in main state update
+              heartAnimationEffect = { 
+                row: ownHQ.row, 
+                col: ownHQ.col, 
+                player: ownHQ.player,
+                timestamp: Date.now(),
+                type: 'heal' as const
+              };
             }
           } else {
             // 2-player game: Heart adds health to own HQ or takes from enemy
@@ -570,32 +570,26 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
               // Add health to own HQ if less than 5
               ownHQ.health += 1;
               
-              // Trigger healing animation effect
-              set(state => ({
-                ...state,
-                lastHQDamaged: { 
-                  row: ownHQ.row, 
-                  col: ownHQ.col, 
-                  player: ownHQ.player,
-                  timestamp: Date.now(),
-                  type: 'heal' // Mark this as a heal effect
-                }
-              }));
+              // Set healing animation effect to be applied in main state update
+              heartAnimationEffect = { 
+                row: ownHQ.row, 
+                col: ownHQ.col, 
+                player: ownHQ.player,
+                timestamp: Date.now(),
+                type: 'heal' as const
+              };
             } else if (enemyHQ) {
               // Otherwise take one from enemy (in 2-player mode only)
               enemyHQ.health -= 1;
               
-              // Trigger damage animation effect
-              set(state => ({
-                ...state,
-                lastHQDamaged: { 
-                  row: enemyHQ.row, 
-                  col: enemyHQ.col, 
-                  player: enemyHQ.player,
-                  timestamp: Date.now(),
-                  type: 'damage' // Mark this as a damage effect
-                }
-              }));
+              // Set damage animation effect to be applied in main state update
+              heartAnimationEffect = { 
+                row: enemyHQ.row, 
+                col: enemyHQ.col, 
+                player: enemyHQ.player,
+                timestamp: Date.now(),
+                type: 'damage' as const
+              };
             }
           }
         } catch (error) {
@@ -604,21 +598,30 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           const ownHQ = newHqs.find(hq => hq.player === currentPlayer);
           if (ownHQ && ownHQ.health < 5) {
             ownHQ.health += 1;
-            set(state => ({
-              ...state,
-              lastHQDamaged: { 
-                row: ownHQ.row, 
-                col: ownHQ.col, 
-                player: ownHQ.player,
-                timestamp: Date.now(),
-                type: 'heal'
-              }
-            }));
+            heartAnimationEffect = { 
+              row: ownHQ.row, 
+              col: ownHQ.col, 
+              player: ownHQ.player,
+              timestamp: Date.now(),
+              type: 'heal' as const
+            };
           }
         }
         
         // Remove the power-up after use
         newPowerUps.splice(powerUpIndex, 1);
+        
+        // Apply heart effect animation if one was set
+        if (heartAnimationEffect) {
+          set(state => ({
+            ...state,
+            lastHQDamaged: heartAnimationEffect,
+            grid: newGrid,
+            hqs: newHqs,
+            powerUps: newPowerUps
+          }));
+          return state; // Exit early since we've applied the state update
+        }
       } else {
         // Normal move - add a dot to the selected cell
         if (newGrid[row][col].player !== currentPlayer && newGrid[row][col].player !== null) {

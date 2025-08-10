@@ -503,11 +503,12 @@ const MainMenu: React.FC = () => {
 
           <div className="mb-4 md:mb-6">
             <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 justify-items-center">
+            <div className="flex justify-center">
+              <div className="grid grid-cols-4 gap-3 w-fit">
               {playerConfigs.map((config) => (
                 <motion.div 
                   key={config.player} 
-                  className={`w-14 h-14 md:w-16 md:h-16 rounded-full cursor-pointer relative ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
+                  className={`w-16 h-16 rounded-full cursor-pointer relative ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
                   style={{ 
                     backgroundColor: PLAYER_COLORS[config.player]
                   }}
@@ -532,6 +533,7 @@ const MainMenu: React.FC = () => {
                   </div>
                 </motion.div>
               ))}
+              </div>
             </div>
           </div>
           
