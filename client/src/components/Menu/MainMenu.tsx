@@ -518,7 +518,7 @@ const MainMenu: React.FC = () => {
           <div className="mb-4">
             <h3 className="text-lg font-semibold mb-2 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
             <div className="flex justify-center">
-              <div className="grid grid-cols-4 gap-2 w-fit">
+              <div className="grid grid-cols-4 gap-2 w-fit justify-center">
               {playerConfigs.map((config) => (
                 <motion.div 
                   key={config.player} 
