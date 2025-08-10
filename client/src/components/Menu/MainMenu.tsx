@@ -139,7 +139,7 @@ const MainMenu: React.FC = () => {
   
   // Check for navigation state from tutorial
   const location = window.location;
-  const navigationState = history.state?.usr;
+  const navigationState = history.state?.usr || window.history.state;
   
   // Menu state
   const [menuScreen, setMenuScreen] = useState<'main' | 'mode' | 'singleplayer' | 'multiplayer' | 'tutorial' | 'tutorial-content'>(() => {

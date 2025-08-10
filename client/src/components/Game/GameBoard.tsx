@@ -46,18 +46,18 @@ const GameBoard: React.FC<GameBoardProps> = ({
   // Calculate responsive scale based on viewport
   useEffect(() => {
     const calculateScale = () => {
-      const boardWidth = cols * CELL_SIZE + cols * 2 + 24;
-      const boardHeight = rows * CELL_SIZE + rows * 2 + 24;
+      const boardWidth = cols * CELL_SIZE + cols * 2 + 48; // Include padding
+      const boardHeight = rows * CELL_SIZE + rows * 2 + 48;
       
-      const availableWidth = window.innerWidth - 32; // Account for padding
-      const availableHeight = window.innerHeight - 200; // Account for UI elements
+      const availableWidth = window.innerWidth - 16; // Minimal padding
+      const availableHeight = window.innerHeight - 160; // Space for controls
       
       const scaleX = availableWidth / boardWidth;
       const scaleY = availableHeight / boardHeight;
       
-      // Use the smaller scale to ensure the board fits, but cap at 1 to avoid upscaling
-      const newScale = Math.min(scaleX, scaleY, 1);
-      setScale(newScale);
+      // Always scale to fit, no cap at 1
+      const newScale = Math.min(scaleX, scaleY, 0.95); // 95% to ensure it fits
+      setScale(Math.max(newScale, 0.3)); // Minimum scale
     };
 
     calculateScale();
@@ -124,15 +124,13 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center w-full h-full">
       <motion.div 
         className="relative"
         initial="hidden"
         animate={gameStarted ? "visible" : "hidden"}
         variants={boardContainerVariants}
         style={{ 
-          width: cols * CELL_SIZE + cols * 2 + 24,
-          height: rows * CELL_SIZE + rows * 2 + 24,
           background: "rgba(255, 255, 255, 0.05)",
           border: "none",
           boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)",
