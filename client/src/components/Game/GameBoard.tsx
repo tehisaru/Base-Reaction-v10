@@ -124,22 +124,22 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
-
-      
+    <div className="flex items-center justify-center">
       <motion.div 
-        className="relative flex flex-col items-center justify-center p-1 sm:p-2 md:p-6 rounded-xl md:rounded-2xl"
+        className="relative"
         initial="hidden"
         animate={gameStarted ? "visible" : "hidden"}
         variants={boardContainerVariants}
         style={{ 
-          width: cols * CELL_SIZE + cols * 2 + 24, // Fixed width
-          height: rows * CELL_SIZE + rows * 2 + 24, // Fixed height
+          width: cols * CELL_SIZE + cols * 2 + 24,
+          height: rows * CELL_SIZE + rows * 2 + 24,
           background: "rgba(255, 255, 255, 0.05)",
-          border: "none", // Remove border for completely flat look
-          boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)", // Add constant glow to board edges
+          border: "none",
+          boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)",
           transformOrigin: 'center',
-          transform: `scale(${scale})` // Apply responsive scale
+          transform: `scale(${scale})`,
+          padding: '12px',
+          borderRadius: '16px'
         }}
       >
 

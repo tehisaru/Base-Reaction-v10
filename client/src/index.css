@@ -41,10 +41,9 @@
     @apply font-sans antialiased bg-gray-900 text-white;
     margin: 0;
     padding: 0;
-    overflow: hidden;
     width: 100vw;
     height: 100vh;
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-x: hidden;
   }
 }
 

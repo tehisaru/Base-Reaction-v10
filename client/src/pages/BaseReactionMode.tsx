@@ -90,20 +90,18 @@ const BaseReactionMode: React.FC = () => {
         isBaseMode={true}
       />
       
-      <div className="flex-1 flex items-center justify-center">
-        <GameBoard
-          grid={grid}
-          rows={rows}
-          cols={cols}
-          currentPlayer={currentPlayer}
-          onCellClick={handleCellClick}
-          isValidMove={isValidMove}
-          powerUps={powerUps}
-          hqs={hqs}
-          isAnimating={isAnimating}
-          setIsAnimating={setIsAnimating}
-        />
-      </div>
+      <GameBoard
+        grid={grid}
+        rows={rows}
+        cols={cols}
+        currentPlayer={currentPlayer}
+        onCellClick={handleCellClick}
+        isValidMove={isValidMove}
+        powerUps={powerUps}
+        hqs={hqs}
+        isAnimating={isAnimating}
+        setIsAnimating={setIsAnimating}
+      />
       
       {/* Power-up explainer removed and moved to Tutorial */}
       
