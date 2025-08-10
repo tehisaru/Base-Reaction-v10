@@ -137,10 +137,24 @@ export const setPlayerSettings = (settings: PlayerSelectionSettings): void => {
 const MainMenu: React.FC = () => {
   const navigate = useNavigate();
   
+  // Check for navigation state from tutorial
+  const location = window.location;
+  const navigationState = history.state?.usr;
+  
   // Menu state
-  const [menuScreen, setMenuScreen] = useState<'main' | 'mode' | 'singleplayer' | 'multiplayer' | 'tutorial' | 'tutorial-content'>('main');
+  const [menuScreen, setMenuScreen] = useState<'main' | 'mode' | 'singleplayer' | 'multiplayer' | 'tutorial' | 'tutorial-content'>(() => {
+    if (navigationState?.openMultiplayer) {
+      return 'multiplayer';
+    }
+    return 'main';
+  });
   const [tutorialMode, setTutorialMode] = useState<'classic' | 'base-reaction'>('classic');
-  const [selectedMode, setSelectedMode] = useState<'classic' | 'base-reaction'>('classic');
+  const [selectedMode, setSelectedMode] = useState<'classic' | 'base-reaction'>(() => {
+    if (navigationState?.selectedMode) {
+      return navigationState.selectedMode;
+    }
+    return 'classic';
+  });
   const [aiStrategy, setAIStrategy] = useState<AI_STRATEGY>(AI_STRATEGY.WEIGHTS_BASED);
   
   // Initialize number of players from existing settings
@@ -474,11 +488,11 @@ const MainMenu: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-black p-3 md:p-8 w-[90%] sm:w-[80%] max-w-sm md:max-w-md mx-auto"
+          className="bg-black p-4 w-full max-w-xs mx-auto"
         >
-          <div className="mb-4 md:mb-6">
-            <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-3" style={{ fontFamily: 'Menlo, monospace' }}>Number of Players</h3>
-            <div className="grid grid-cols-3 gap-2 md:gap-4">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: 'Menlo, monospace' }}>Number of Players</h3>
+            <div className="grid grid-cols-3 gap-2">
               {[2, 3, 4].map((num) => (
                 <motion.button
                   key={num}
@@ -486,7 +500,7 @@ const MainMenu: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.1 }}
                   onClick={() => handleNumPlayersChange(num as 2 | 3 | 4)}
-                  className={`h-12 md:h-14 px-3 md:px-6 rounded-xl border-2 border-white text-lg md:text-xl transition-all duration-100 flex items-center justify-center ${
+                  className={`h-12 px-3 rounded-xl border-2 border-white text-lg transition-all duration-100 flex items-center justify-center ${
                     numPlayers === num 
                       ? 'bg-white text-black hover:bg-gray-200'
                       : 'bg-black hover:bg-gray-800 text-white'
@@ -501,14 +515,14 @@ const MainMenu: React.FC = () => {
           
 
 
-          <div className="mb-4 md:mb-6">
-            <h3 className="text-base md:text-lg font-semibold mb-2 md:mb-3 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold mb-2 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
             <div className="flex justify-center">
-              <div className="grid grid-cols-4 gap-3 w-fit">
+              <div className="grid grid-cols-4 gap-2 w-fit">
               {playerConfigs.map((config) => (
                 <motion.div 
                   key={config.player} 
-                  className={`w-16 h-16 rounded-full cursor-pointer relative ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
+                  className={`w-14 h-14 rounded-full cursor-pointer relative ${config.player === PLAYER.BLACK ? 'border-2 border-white' : ''}`}
                   style={{ 
                     backgroundColor: PLAYER_COLORS[config.player]
                   }}
@@ -521,7 +535,7 @@ const MainMenu: React.FC = () => {
                       <img 
                         src="/icons/human_icon.png" 
                         alt="Human" 
-                        className="w-8 h-8"
+                        className="w-7 h-7"
                         loading="eager"
                         decoding="sync"
                       />
@@ -529,7 +543,7 @@ const MainMenu: React.FC = () => {
                       <img 
                         src="/icons/AI_icon.png" 
                         alt="AI" 
-                        className="w-8 h-8"
+                        className="w-7 h-7"
                         loading="eager"
                         decoding="sync"
                       />

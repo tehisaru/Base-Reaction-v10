@@ -88,11 +88,8 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
-              if (onBack) {
-                onBack(); // Go back to main menu first
-              } else {
-                navigate("/"); // Navigate back to main menu for game setup
-              }
+              // Navigate to the multiplayer setup for the specific mode
+              navigate("/", { state: { selectedMode: mode, openMultiplayer: true } });
             }}
             className="py-4 px-8 rounded-2xl text-white bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white w-full md:w-auto"
             style={typewriterFont}
