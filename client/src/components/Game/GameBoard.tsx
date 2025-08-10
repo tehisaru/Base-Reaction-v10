@@ -185,8 +185,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   isHQDamaged={isHQEffected && hqEffectType === 'damage'}
                   isHQHealed={isHQEffected && hqEffectType === 'heal'}
                   isHQDestroyed={isHQEffected && hqEffectType === 'destroyed'}
-                  heartSelectionMode={heartSelectionMode}
-                  pendingHeartPlayer={pendingHeartPlayer}
+                  heartSelectionMode={false}
+                  pendingHeartPlayer={undefined}
                 />
               </motion.div>
             );

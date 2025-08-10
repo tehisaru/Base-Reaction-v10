@@ -522,12 +522,16 @@ const MainMenu: React.FC = () => {
                         src="/icons/human_icon.png" 
                         alt="Human" 
                         className="w-8 h-8"
+                        loading="eager"
+                        decoding="sync"
                       />
                     ) : (
                       <img 
                         src="/icons/AI_icon.png" 
                         alt="AI" 
                         className="w-8 h-8"
+                        loading="eager"
+                        decoding="sync"
                       />
                     )}
                   </div>

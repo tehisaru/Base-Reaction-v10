@@ -15,14 +15,14 @@ export const PLAYER_COLORS = {
   [PLAYER.BLUE]: "rgb(55, 114, 255)",   // Royal blue
   [PLAYER.RED]: "rgb(223, 41, 53)",     // Bright red
   [PLAYER.BLACK]: "rgb(8, 7, 8)",      // Black
-  [PLAYER.VIOLET]: "rgb(253, 202, 64)"  // Golden yellow
+  [PLAYER.VIOLET]: "rgb(138, 43, 226)"  // Violet purple
 };
 
 export const PLAYER_BG_COLORS = {
   [PLAYER.BLUE]: "rgb(27, 57, 128)",    // Darker royal blue
   [PLAYER.RED]: "rgb(112, 20, 26)",     // Darker bright red
   [PLAYER.BLACK]: "rgb(10, 10, 10)",    // Darker black
-  [PLAYER.VIOLET]: "rgb(127, 101, 32)"  // Darker golden yellow
+  [PLAYER.VIOLET]: "rgb(69, 21, 113)"   // Darker violet purple
 };
 
 export const CELL_SIZE = 60;
