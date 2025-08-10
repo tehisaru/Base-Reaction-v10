@@ -1144,7 +1144,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
       // Generate only ONE power-up with a 25% chance after the first turn
       // But don't generate if we already have too many (max 4 power-ups) - reduced spawn rate by 20%
-      if (isBaseMode && state.history.length >= 1 && Math.random() < 1 && newPowerUps.length < 4) {
+      if (isBaseMode && state.history.length >= 1 && Math.random() < 0.25 && newPowerUps.length < 4) {
         console.log("Randomly generating ONE power-up with 25% chance");
         const { rows, cols } = state;
 

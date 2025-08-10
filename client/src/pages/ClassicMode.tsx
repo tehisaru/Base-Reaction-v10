@@ -71,10 +71,10 @@ const ClassicMode: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-center p-2 md:p-4 transition-colors duration-500"
+      className="min-h-screen flex flex-col items-center p-2 md:p-4 transition-colors duration-500"
       style={{ backgroundColor: PLAYER_BG_COLORS[currentPlayer] }}
     >
-      <h1 className="text-3xl font-bold mb-6 text-white" style={{ fontFamily: 'Menlo, monospace' }}>Chain Reaction</h1>
+      <h1 className="text-3xl font-bold mb-6 text-white pt-4" style={{ fontFamily: 'Menlo, monospace' }}>Chain Reaction</h1>
       
       <GameControls
         currentPlayer={currentPlayer}
@@ -84,16 +84,18 @@ const ClassicMode: React.FC = () => {
         isBaseMode={false}
       />
       
-      <GameBoard
-        grid={grid}
-        rows={rows}
-        cols={cols}
-        currentPlayer={currentPlayer}
-        onCellClick={handleCellClick}
-        isValidMove={isValidMove}
-        isAnimating={isAnimating}
-        setIsAnimating={setIsAnimating}
-      />
+      <div className="flex-1 flex items-center justify-center">
+        <GameBoard
+          grid={grid}
+          rows={rows}
+          cols={cols}
+          currentPlayer={currentPlayer}
+          onCellClick={handleCellClick}
+          isValidMove={isValidMove}
+          isAnimating={isAnimating}
+          setIsAnimating={setIsAnimating}
+        />
+      </div>
       
       {gameOver && winner && (
         <GameOverOverlay
