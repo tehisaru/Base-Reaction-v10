@@ -139,7 +139,7 @@ const MainMenu: React.FC = () => {
   
   // Check for navigation state from tutorial
   const location = window.location;
-  const navigationState = history.state?.usr || window.history.state;
+  const navigationState = history.state?.usr;
   
   // Menu state
   const [menuScreen, setMenuScreen] = useState<'main' | 'mode' | 'singleplayer' | 'multiplayer' | 'tutorial' | 'tutorial-content'>(() => {
@@ -518,7 +518,7 @@ const MainMenu: React.FC = () => {
           <div className="mb-4">
             <h3 className="text-lg font-semibold mb-2 text-center" style={{ fontFamily: 'Menlo, monospace' }}>Players</h3>
             <div className="flex justify-center">
-              <div className="grid grid-cols-4 gap-2 w-fit justify-center">
+              <div className="grid grid-cols-4 gap-2 w-fit">
               {playerConfigs.map((config) => (
                 <motion.div 
                   key={config.player} 

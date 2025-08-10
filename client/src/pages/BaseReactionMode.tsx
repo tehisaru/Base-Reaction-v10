@@ -77,37 +77,31 @@ const BaseReactionMode: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col transition-colors duration-500 overflow-hidden"
+      className="min-h-screen flex flex-col items-center p-2 md:p-4 transition-colors duration-500"
       style={{ backgroundColor: PLAYER_BG_COLORS[currentPlayer] }}
     >
-      <div className="flex-shrink-0 text-center py-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-white" style={{ fontFamily: 'Menlo, monospace' }}>Base Reaction</h1>
-      </div>
+      <h1 className="text-3xl font-bold mb-6 text-white pt-4" style={{ fontFamily: 'Menlo, monospace' }}>Base Reaction</h1>
       
-      <div className="flex-shrink-0">
-        <GameControls
-          currentPlayer={currentPlayer}
-          onUndo={undo}
-          onRestart={restart}
-          canUndo={history.length > 0}
-          isBaseMode={true}
-        />
-      </div>
+      <GameControls
+        currentPlayer={currentPlayer}
+        onUndo={undo}
+        onRestart={restart}
+        canUndo={history.length > 0}
+        isBaseMode={true}
+      />
       
-      <div className="flex-1 flex items-center justify-center min-h-0">
-        <GameBoard
-          grid={grid}
-          rows={rows}
-          cols={cols}
-          currentPlayer={currentPlayer}
-          onCellClick={handleCellClick}
-          isValidMove={isValidMove}
-          powerUps={powerUps}
-          hqs={hqs}
-          isAnimating={isAnimating}
-          setIsAnimating={setIsAnimating}
-        />
-      </div>
+      <GameBoard
+        grid={grid}
+        rows={rows}
+        cols={cols}
+        currentPlayer={currentPlayer}
+        onCellClick={handleCellClick}
+        isValidMove={isValidMove}
+        powerUps={powerUps}
+        hqs={hqs}
+        isAnimating={isAnimating}
+        setIsAnimating={setIsAnimating}
+      />
       
       {/* Power-up explainer removed and moved to Tutorial */}
       
