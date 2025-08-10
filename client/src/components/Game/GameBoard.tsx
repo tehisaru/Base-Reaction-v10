@@ -141,7 +141,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="min-h-screen flex flex-col items-center justify-center">
       {/* Heart selection message */}
       {heartSelectionMode && (
         <motion.div
@@ -154,7 +154,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       )}
       
       <motion.div 
-        className="flex flex-col items-center justify-center p-1 sm:p-2 md:p-6 rounded-xl md:rounded-2xl"
+        className="relative flex flex-col items-center justify-center p-1 sm:p-2 md:p-6 rounded-xl md:rounded-2xl"
         initial="hidden"
         animate={gameStarted ? "visible" : "hidden"}
         variants={boardContainerVariants}

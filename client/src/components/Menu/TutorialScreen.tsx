@@ -90,12 +90,8 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
             onClick={() => {
               if (onBack) {
                 onBack(); // Go back to main menu first
-                // Navigate to appropriate game setup 
-                setTimeout(() => {
-                  navigate(mode === "classic" ? "/classic" : "/base-reaction");
-                }, 100);
               } else {
-                navigate(mode === "classic" ? "/classic" : "/base-reaction");
+                navigate("/"); // Navigate back to main menu for game setup
               }
             }}
             className="py-4 px-8 rounded-2xl text-white bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white w-full md:w-auto"
