@@ -90,23 +90,8 @@ const BoardCell: React.FC<BoardCellProps> = ({
 
   return (
     <div className="relative" style={{ width: CELL_SIZE, height: CELL_SIZE }}>
-      {/* Glow effect layer - rendered first to be behind everything */}
-      {isHQ && hqHealth !== undefined && hqHealth > 0 && (
-        <div
-          className="absolute inset-0"
-          style={{
-            background: isHeartTarget 
-              ? `radial-gradient(circle, rgba(255,0,0,0.4) 0%, rgba(255,0,0,0.2) 50%, transparent 100%)`
-              : `radial-gradient(circle, ${PLAYER_COLORS[cell.player!]}66 0%, ${PLAYER_COLORS[cell.player!]}33 50%, transparent 100%)`,
-            filter: isHeartTarget 
-              ? `drop-shadow(0 0 30px #ff0000) drop-shadow(0 0 50px #ff0000)`
-              : `drop-shadow(0 0 ${Math.max(10, hqHealth * 8)}px ${PLAYER_COLORS[cell.player!]}) drop-shadow(0 0 ${Math.max(20, hqHealth * 12)}px ${PLAYER_COLORS[cell.player!]})`,
-            transition: "all 0.3s ease",
-            zIndex: 1
-          }}
-        />
-      )}
-      
+
+  
       {/* Main cell content */}
       <div
         ref={cellRef}
@@ -420,12 +405,12 @@ const BoardCell: React.FC<BoardCellProps> = ({
         )}
       </AnimatePresence>
       
-      {/* Health number with strong contrast - highest z-index */}
+      {/* Health number*/}
       {isHQ && hqHealth !== undefined && (
         <div 
-          className="absolute inset-0 flex items-center justify-center pointer-events-none text-white font-bold text-xl"
+          className="absolute inset-0 flex items-center justify-center pointer-events-none text-white font-bold text-2xl"
           style={{
-            textShadow: "2px 2px 4px rgba(0,0,0,0.9), -2px -2px 4px rgba(0,0,0,0.9), 2px -2px 4px rgba(0,0,0,0.9), -2px 2px 4px rgba(0,0,0,0.9)",
+      
             zIndex: 30
           }}
         >
@@ -446,15 +431,17 @@ const BoardCell: React.FC<BoardCellProps> = ({
             style={{
               width: '80%', 
               height: '80%',
+              backgroundColor: 'transparent',
+              border: '1px solid transparent',
               boxShadow: `
                 0 0 ${8 + hqHealth * 4}px ${PLAYER_COLORS[cell.player!]},
                 0 0 ${16 + hqHealth * 8}px ${PLAYER_COLORS[cell.player!]}aa,
                 0 0 ${24 + hqHealth * 12}px ${PLAYER_COLORS[cell.player!]}66,
                 0 0 ${32 + hqHealth * 16}px ${PLAYER_COLORS[cell.player!]}44
-              `,
-              animation: 'pulse 2s infinite ease-in-out'
+              `
             }}
           />
+
         </div>
       )}
       
