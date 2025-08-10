@@ -35,7 +35,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const [gameStarted, setGameStarted] = useState(false);
   const [scale, setScale] = useState(1);
   const { playHit } = useAudio();
-  const { lastHQDamaged, heartSelectionMode, selectHeartTarget, pendingHeartPlayer } = useChainReaction();
+  const { lastHQDamaged } = useChainReaction();
   
   // Trigger entrance animation immediately when the component mounts
   useEffect(() => {
@@ -67,23 +67,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
   
   // Handle cell click with animation tracking
   const handleCellClick = (row: number, col: number) => {
-    // Check if we're in heart selection mode
-    if (heartSelectionMode) {
-      // Look for HQ at this position
-      const targetHQ = hqs.find(hq => hq.row === row && hq.col === col);
-      if (targetHQ && targetHQ.player !== pendingHeartPlayer) {
-        // Valid target - execute heart target selection
-        console.log(`Heart target selected: ${targetHQ.player}`);
-        selectHeartTarget(targetHQ.player);
-        return;
-      } else {
-        console.log("Invalid heart target selection");
-        return;
-      }
-    }
-    
-    // REMOVED animation check to allow dot placement at any time
-    
     // Play sound effect
     playHit();
     
@@ -142,16 +125,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
-      {/* Heart selection message */}
-      {heartSelectionMode && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4 px-4 py-2 bg-red-600 text-white rounded-lg text-center font-semibold"
-        >
-          Click on an enemy base to damage it!
-        </motion.div>
-      )}
+
       
       <motion.div 
         className="relative flex flex-col items-center justify-center p-1 sm:p-2 md:p-6 rounded-xl md:rounded-2xl"
@@ -168,40 +142,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
           transform: `scale(${scale})` // Apply responsive scale
         }}
       >
-        {/* Vertical grid lines */}
-        {Array.from({ length: cols + 1 }, (_, index) => (
-          <div
-            key={`vertical-line-${index}`}
-            className="absolute"
-            style={{
-              left: index * (CELL_SIZE + 2) + 12,
-              top: 12,
-              width: '2px',
-              height: rows * (CELL_SIZE + 2),
-              background: 'rgba(255, 255, 255, 0.2)',
-              zIndex: 1
-            }}
-          />
-        ))}
-        
-        {/* Horizontal grid lines */}
-        {Array.from({ length: rows + 1 }, (_, index) => (
-          <div
-            key={`horizontal-line-${index}`}
-            className="absolute"
-            style={{
-              left: 12,
-              top: index * (CELL_SIZE + 2) + 12,
-              width: cols * (CELL_SIZE + 2),
-              height: '2px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              zIndex: 1
-            }}
-          />
-        ))}
+
         
       {grid.map((rowCells, rowIndex) => (
-        <div key={`row-${rowIndex}`} className="flex" style={{ zIndex: 10, position: 'relative' }}>
+        <div key={`row-${rowIndex}`} className="flex gap-[2px]" style={{ zIndex: 10, position: 'relative', marginBottom: rowIndex < rows - 1 ? '2px' : '0' }}>
           {rowCells.map((cell, colIndex) => {
             const powerUpType = getPowerUpType(rowIndex, colIndex);
             const { isHQ, health } = getHQInfo(rowIndex, colIndex);

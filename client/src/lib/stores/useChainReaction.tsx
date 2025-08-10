@@ -63,10 +63,7 @@ interface ChainReactionState {
   hqs: HQCell[];
   powerUps: PowerUpCell[];
 
-  // Heart power-up target selection state
-  heartSelectionMode: boolean;
-  setHeartSelectionMode: (enabled: boolean) => void;
-  pendingHeartPlayer?: PLAYER; // Player who triggered the heart power-up
+
 
   // History for undo
   history: GameHistory[];
@@ -78,7 +75,7 @@ interface ChainReactionState {
   undo: () => void;
   restart: () => void;
   isValidMove: (row: number, col: number) => boolean; // This is explicitly a boolean return
-  selectHeartTarget: (targetPlayer: PLAYER) => void; // New function for heart target selection
+
 
   // Utilities
   getCriticalMass: (row: number, col: number) => number;
@@ -103,10 +100,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
   hqs: [],
   powerUps: [],
 
-  // Heart power-up target selection state
-  heartSelectionMode: false,
-  setHeartSelectionMode: (enabled) => set({ heartSelectionMode: enabled }),
-  pendingHeartPlayer: undefined,
+
 
   // History for undo
   history: [],
@@ -328,10 +322,10 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
   // Check if a move is valid
   isValidMove: (row, col) => {
-    const { grid, currentPlayer, gameOver, isBaseMode, hqs, heartSelectionMode } = get();
+    const { grid, currentPlayer, gameOver, isBaseMode, hqs } = get();
 
-    // No moves if game is over or in heart selection mode
-    if (gameOver || heartSelectionMode) return false;
+    // No moves if game is over
+    if (gameOver) return false;
 
     // Safety check for valid coordinates
     if (row < 0 || col < 0 || row >= grid.length || col >= grid[0].length) {
@@ -518,8 +512,11 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         // Remove the power-up after use
         newPowerUps.splice(powerUpIndex, 1);
       } else if (powerUp && powerUp.type === 'heart') {
-        // SIMPLE HEART POWER-UP LOGIC - Completely rewritten from scratch
-        console.log("Heart power-up activated!");
+        // NEW HEART POWER-UP LOGIC - Fresh implementation
+        console.log("Heart power-up used!");
+        
+        // Remove power-up first
+        newPowerUps.splice(powerUpIndex, 1);
         
         // Get own HQ
         const ownHQ = newHqs.find(hq => hq.player === currentPlayer);
@@ -528,18 +525,11 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           return state;
         }
         
-        // Count enemy HQs
-        const enemyHQs = newHqs.filter(hq => hq.player !== currentPlayer);
-        
         if (ownHQ.health < 5) {
-          // Case 1: Player has less than 5 health - heal self
-          console.log("Healing own HQ");
+          // Heal self if below max health
+          console.log("Heart: Healing own HQ");
           ownHQ.health += 1;
           
-          // Remove power-up immediately
-          newPowerUps.splice(powerUpIndex, 1);
-          
-          // Set heal animation
           const healEffect = {
             row: ownHQ.row,
             col: ownHQ.col,
@@ -548,7 +538,6 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
             type: 'heal' as const
           };
           
-          // Apply state update and return
           set(state => ({
             ...state,
             lastHQDamaged: healEffect,
@@ -557,44 +546,30 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
             powerUps: newPowerUps
           }));
           return state;
+        } else {
+          // Player has 5 health - find enemy with least lives
+          const enemyHQs = newHqs.filter(hq => hq.player !== currentPlayer);
+          if (enemyHQs.length === 0) {
+            console.log("No enemies found");
+            return state;
+          }
           
-        } else if (enemyHQs.length > 1) {
-          // Case 2: Player has 5 health and multiple enemies - enter target selection mode
-          console.log("Entering heart target selection mode");
+          // Find enemy with lowest health
+          const targetEnemy = enemyHQs.reduce((lowest, current) => 
+            current.health < lowest.health ? current : lowest
+          );
           
-          // Remove power-up immediately
-          newPowerUps.splice(powerUpIndex, 1);
+          console.log(`Heart: Damaging enemy ${targetEnemy.player} with ${targetEnemy.health} health`);
+          targetEnemy.health -= 1;
           
-          // Enter selection mode
-          set(state => ({
-            ...state,
-            heartSelectionMode: true,
-            pendingHeartPlayer: currentPlayer,
-            powerUps: newPowerUps,
-            grid: newGrid,
-            hqs: newHqs
-          }));
-          return state;
-          
-        } else if (enemyHQs.length === 1) {
-          // Case 3: Player has 5 health and only one enemy - damage that enemy
-          console.log("Damaging single enemy HQ");
-          const enemyHQ = enemyHQs[0];
-          enemyHQ.health -= 1;
-          
-          // Remove power-up immediately
-          newPowerUps.splice(powerUpIndex, 1);
-          
-          // Set damage animation
           const damageEffect = {
-            row: enemyHQ.row,
-            col: enemyHQ.col,
-            player: enemyHQ.player,
+            row: targetEnemy.row,
+            col: targetEnemy.col,
+            player: targetEnemy.player,
             timestamp: Date.now(),
             type: 'damage' as const
           };
           
-          // Apply state update and return
           set(state => ({
             ...state,
             lastHQDamaged: damageEffect,
@@ -604,10 +579,6 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           }));
           return state;
         }
-        
-        // Fallback: just remove the power-up
-        console.log("Heart power-up fallback - removing power-up");
-        newPowerUps.splice(powerUpIndex, 1);
       } else {
         // Normal move - add a dot to the selected cell
         if (newGrid[row][col].player !== currentPlayer && newGrid[row][col].player !== null) {
@@ -1173,8 +1144,8 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
       // Generate only ONE power-up with a 25% chance after the first turn
       // But don't generate if we already have too many (max 4 power-ups) - reduced spawn rate by 20%
-      if (isBaseMode && state.history.length >= 1 && Math.random() < 0.2 && newPowerUps.length < 4) {
-        console.log("Randomly generating ONE power-up with 20% chance");
+      if (isBaseMode && state.history.length >= 1 && Math.random() < 1 && newPowerUps.length < 4) {
+        console.log("Randomly generating ONE power-up with 25% chance");
         const { rows, cols } = state;
 
         // Import isAdjacentTo utility function from gameUtils
@@ -1285,49 +1256,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
     });
   },
 
-  // Select heart target in multiplayer mode - SIMPLIFIED VERSION
-  selectHeartTarget: (targetPlayer) => {
-    const { heartSelectionMode, pendingHeartPlayer, hqs } = get();
-    
-    if (!heartSelectionMode || !pendingHeartPlayer) {
-      console.log("Not in heart selection mode");
-      return;
-    }
 
-    // Find the target HQ
-    const targetHQ = hqs.find(hq => hq.player === targetPlayer);
-    if (!targetHQ || targetPlayer === pendingHeartPlayer) {
-      console.log("Invalid target");
-      return;
-    }
-
-    console.log(`Heart target selected: damaging ${targetPlayer}`);
-    
-    set(state => {
-      const newHqs = [...state.hqs];
-      const targetHQIndex = newHqs.findIndex(hq => hq.player === targetPlayer);
-      
-      if (targetHQIndex >= 0) {
-        newHqs[targetHQIndex].health -= 1;
-        
-        return {
-          ...state,
-          hqs: newHqs,
-          heartSelectionMode: false,
-          pendingHeartPlayer: undefined,
-          lastHQDamaged: {
-            row: targetHQ.row,
-            col: targetHQ.col,
-            player: targetPlayer,
-            timestamp: Date.now(),
-            type: 'damage' as const
-          }
-        };
-      }
-      
-      return state;
-    });
-  },
 
   // Undo the last move
   undo: () => {
