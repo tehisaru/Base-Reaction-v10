@@ -168,8 +168,40 @@ const GameBoard: React.FC<GameBoardProps> = ({
           transform: `scale(${scale})` // Apply responsive scale
         }}
       >
+        {/* Vertical grid lines */}
+        {Array.from({ length: cols + 1 }, (_, index) => (
+          <div
+            key={`vertical-line-${index}`}
+            className="absolute"
+            style={{
+              left: index * (CELL_SIZE + 2) + 12,
+              top: 12,
+              width: '2px',
+              height: rows * (CELL_SIZE + 2),
+              background: 'rgba(255, 255, 255, 0.2)',
+              zIndex: 1
+            }}
+          />
+        ))}
+        
+        {/* Horizontal grid lines */}
+        {Array.from({ length: rows + 1 }, (_, index) => (
+          <div
+            key={`horizontal-line-${index}`}
+            className="absolute"
+            style={{
+              left: 12,
+              top: index * (CELL_SIZE + 2) + 12,
+              width: cols * (CELL_SIZE + 2),
+              height: '2px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              zIndex: 1
+            }}
+          />
+        ))}
+        
       {grid.map((rowCells, rowIndex) => (
-        <div key={`row-${rowIndex}`} className="flex">
+        <div key={`row-${rowIndex}`} className="flex" style={{ zIndex: 10, position: 'relative' }}>
           {rowCells.map((cell, colIndex) => {
             const powerUpType = getPowerUpType(rowIndex, colIndex);
             const { isHQ, health } = getHQInfo(rowIndex, colIndex);

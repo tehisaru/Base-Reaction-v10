@@ -610,6 +610,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         
         // Remove the power-up after use
         newPowerUps.splice(powerUpIndex, 1);
+        console.log(`Heart power-up used and removed. Remaining power-ups: ${newPowerUps.length}`);
         
         // Apply heart effect animation if one was set
         if (heartAnimationEffect) {
