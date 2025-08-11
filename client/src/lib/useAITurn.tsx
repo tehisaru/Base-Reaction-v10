@@ -14,6 +14,7 @@ export const useAITurn = () => {
     grid,
     isBaseMode,
     hqs,
+    powerUps,
     placeDot,
     animating
   } = useChainReaction();
@@ -32,9 +33,9 @@ export const useAITurn = () => {
       
       // Add a small delay to make the AI move feel more natural
       const timeoutId = setTimeout(() => {
-        // Get the AI's strategy (default to weights-based for now)
+        // Get the AI's strategy (default to hard for aggressive play)
         const strategy = PlayerSettingsManager.getAIStrategy(currentPlayer);
-        const aiMove = getAIMove(grid, currentPlayer, isBaseMode, hqs, strategy);
+        const aiMove = getAIMove(grid, currentPlayer, isBaseMode, hqs, strategy, powerUps);
         
         if (aiMove) {
           console.log(`AI ${currentPlayer} (${strategy}) placed dot at (${aiMove.row}, ${aiMove.col}) with score ${aiMove.score.toFixed(1)}`);
@@ -46,5 +47,5 @@ export const useAITurn = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [currentPlayer, gameOver, grid, isBaseMode, hqs, placeDot, animating]);
+  }, [currentPlayer, gameOver, grid, isBaseMode, hqs, powerUps, placeDot, animating]);
 };

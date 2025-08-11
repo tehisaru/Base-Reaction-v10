@@ -109,14 +109,14 @@ export const PlayerSettingsManager = {
     if (playerConfig) {
       playerConfig.control = control;
       playerConfig.aiStrategy = control === PLAYER_CONTROL.AI ? 
-        (aiStrategy || AI_STRATEGY.WEIGHTS_BASED) : undefined;
+        (aiStrategy || AI_STRATEGY.HARD) : undefined;
     } else {
       // If player config doesn't exist, create it
       settings.playerConfigs.push({
         player,
         control,
         aiStrategy: control === PLAYER_CONTROL.AI ? 
-          (aiStrategy || AI_STRATEGY.WEIGHTS_BASED) : undefined
+          (aiStrategy || AI_STRATEGY.HARD) : undefined
       });
     }
     

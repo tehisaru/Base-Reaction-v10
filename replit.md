@@ -18,7 +18,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Game Logic Architecture
 - **Core Game Store**: `useChainReaction` manages grid state, player turns, win conditions, and game history
-- **AI System**: Configurable AI players with three difficulty levels (easy, medium, hard) using strategic move evaluation
+- **AI System**: Aggressive strategic AI with three difficulty levels (easy, medium, hard) focusing on:
+  - Power-up acquisition and strategic positioning
+  - Aggressive expansion and enemy territory capture
+  - Smart base defense when under attack
+  - Chain reaction maximization for massive damage
+  - Enemy base targeting for decisive victories
 - **Game Modes**: 
   - Classic Mode: Traditional chain reaction rules
   - Base Reaction Mode: Enhanced with headquarters (HQ) system and power-ups
