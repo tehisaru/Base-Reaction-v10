@@ -54,15 +54,20 @@ const BaseReactionMode: React.FC = () => {
     // Check if current player is AI-controlled
     const isCurrentPlayerAI = PlayerSettingsManager.isAIPlayer(currentPlayer);
     
-    // Check if it's an HQ cell and prevent placing there
+    // Check if it's an HQ cell
     const isHQCell = hqs.some(hq => hq.row === row && hq.col === col);
+    
+    // Get heart selection mode from store
+    const { heartSelectionMode } = useChainReaction.getState();
     
     // Only allow clicks if:
     // 1. Game is not over
-    // 2. It's a valid move
-    // 3. Current player is NOT AI-controlled (prevent human playing during AI turn)
-    // 4. Not an HQ cell (prevent placing on HQs)
-    if (!gameOver && isValidMove(row, col) && !isCurrentPlayerAI && !isHQCell) {
+    // 2. Current player is NOT AI-controlled (prevent human playing during AI turn)
+    // 3. Either:
+    //    a. It's a valid move AND not an HQ cell (normal gameplay)
+    //    b. We're in heart selection mode (allow HQ clicks for heart targeting)
+    if (!gameOver && !isCurrentPlayerAI && 
+        ((isValidMove(row, col) && !isHQCell) || heartSelectionMode)) {
       placeDot(row, col);
       
       // Add fallback timeout to ensure animation state resets
