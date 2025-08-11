@@ -442,24 +442,35 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
     // Handle heart power-up enemy selection
     if (heartSelectionMode && pendingHeartPlayer === currentPlayer) {
+      console.log(`Heart selection mode active for player ${currentPlayer}, clicked on cell (${row},${col})`);
+      
       // Check if clicked cell is an enemy HQ
       const targetHQ = hqs.find(hq => hq.row === row && hq.col === col && hq.player !== currentPlayer);
       if (targetHQ) {
-        console.log(`Heart: Selected enemy ${targetHQ.player} for damage`);
+        console.log(`Heart: Selected enemy ${targetHQ.player} at (${row},${col}) for damage. Current health: ${targetHQ.health}`);
         
-        // Damage the selected enemy
+        // Calculate next player for turn change
+        const nextPlayer = currentPlayer === PLAYER.RED ? 
+          PLAYER.BLUE : currentPlayer === PLAYER.BLUE ? 
+          PLAYER.VIOLET : currentPlayer === PLAYER.VIOLET ? 
+          PLAYER.BLACK : PLAYER.RED;
+
+        // Damage the selected enemy, change turn, and reset selection mode in one update
         set(state => {
           const newHqs = state.hqs.map(hq => 
             hq.row === row && hq.col === col 
-              ? { ...hq, health: hq.health - 1 }
+              ? { ...hq, health: Math.max(0, hq.health - 1) }
               : hq
           );
+
+          console.log(`Heart damage applied. New health for ${targetHQ.player}: ${Math.max(0, targetHQ.health - 1)}`);
 
           return {
             ...state,
             hqs: newHqs,
             heartSelectionMode: false,
-            pendingHeartPlayer: null
+            pendingHeartPlayer: null,
+            currentPlayer: nextPlayer
           };
         });
 
@@ -475,15 +486,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
               type: 'damage' as const
             }
           }));
-        }, 0);
-
-        // Change turn after enemy selection
-        set(state => ({
-          currentPlayer: state.currentPlayer === PLAYER.RED ? 
-            PLAYER.BLUE : state.currentPlayer === PLAYER.BLUE ? 
-            PLAYER.VIOLET : state.currentPlayer === PLAYER.VIOLET ? 
-            PLAYER.BLACK : PLAYER.RED
-        }));
+        }, 100); // Small delay to ensure state update completes first
 
         return; // Exit early, don't process as normal move
       } else {
