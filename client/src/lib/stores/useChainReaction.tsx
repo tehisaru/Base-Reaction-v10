@@ -452,11 +452,39 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
       if (targetHQ) {
         console.log(`Heart: Selected enemy ${targetHQ.player} at (${row},${col}) for damage. Current health: ${targetHQ.health}`);
         
-        // Calculate next player for turn change
-        const nextPlayer = currentPlayer === PLAYER.RED ? 
-          PLAYER.BLUE : currentPlayer === PLAYER.BLUE ? 
-          PLAYER.VIOLET : currentPlayer === PLAYER.VIOLET ? 
-          PLAYER.BLACK : PLAYER.RED;
+        // Get player settings using PlayerSettingsManager for proper turn rotation
+        let activePlayers: PLAYER[] = [PLAYER.RED, PLAYER.BLUE]; // Default
+        
+        try {
+          const settings = PlayerSettingsManager.getSettings();
+          
+          if (settings.players && Array.isArray(settings.players) && settings.players.length > 0) {
+            activePlayers = settings.players;
+            console.log("Using player settings for heart selection turn rotation:", settings);
+          } else {
+            console.log("No valid player settings found, using defaults for heart selection");
+          }
+        } catch (error) {
+          console.log("Error getting player settings for heart selection:", error);
+        }
+        
+        // Filter out dead players (in base mode)
+        const livingHQPlayers = hqs
+          .filter(hq => hq.health > 0)
+          .map(hq => hq.player);
+          
+        activePlayers = activePlayers.filter(player => 
+          livingHQPlayers.includes(player)
+        );
+        
+        // Calculate next player using proper rotation
+        let nextPlayer = currentPlayer;
+        if (activePlayers.length > 0) {
+          const currentIndex = activePlayers.indexOf(currentPlayer);
+          const safeCurrentIndex = currentIndex === -1 ? 0 : currentIndex;
+          const nextIndex = (safeCurrentIndex + 1) % activePlayers.length;
+          nextPlayer = activePlayers[nextIndex];
+        }
 
         // Damage the selected enemy, change turn, and reset selection mode in one update
         set(state => {
@@ -495,20 +523,42 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
       } else {
         // Clicked on non-enemy HQ cell, cancel selection mode
         console.log("Heart: Selection cancelled (clicked on non-target cell)");
+        
+        // Get player settings for proper turn rotation
+        let activePlayers: PLAYER[] = [PLAYER.RED, PLAYER.BLUE]; // Default
+        
+        try {
+          const settings = PlayerSettingsManager.getSettings();
+          
+          if (settings.players && Array.isArray(settings.players) && settings.players.length > 0) {
+            activePlayers = settings.players;
+          }
+        } catch (error) {
+          console.log("Error getting player settings for heart selection cancellation:", error);
+        }
+        
+        // Filter out dead players
+        const livingHQPlayers = hqs
+          .filter(hq => hq.health > 0)
+          .map(hq => hq.player);
+          
+        activePlayers = activePlayers.filter(player => 
+          livingHQPlayers.includes(player)
+        );
+        
+        // Calculate next player
+        let nextPlayer = currentPlayer;
+        if (activePlayers.length > 0) {
+          const currentIndex = activePlayers.indexOf(currentPlayer);
+          const safeCurrentIndex = currentIndex === -1 ? 0 : currentIndex;
+          const nextIndex = (safeCurrentIndex + 1) % activePlayers.length;
+          nextPlayer = activePlayers[nextIndex];
+        }
+        
         set(state => ({
           ...state,
           heartSelectionMode: false,
-          pendingHeartPlayer: null
-        }));
-        
-        // Continue with normal turn switching after cancellation
-        const nextPlayer = currentPlayer === PLAYER.RED ? 
-          PLAYER.BLUE : currentPlayer === PLAYER.BLUE ? 
-          PLAYER.VIOLET : currentPlayer === PLAYER.VIOLET ? 
-          PLAYER.BLACK : PLAYER.RED;
-        
-        set(state => ({
-          ...state,
+          pendingHeartPlayer: null,
           currentPlayer: nextPlayer
         }));
         
