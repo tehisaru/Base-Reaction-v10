@@ -434,6 +434,43 @@ const BoardCell: React.FC<BoardCellProps> = ({
           />
         )}
 
+      {/* Heart selection mode - cyan diagonal lines for enemy HQ targets */}
+      {isHeartTarget && (
+        <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 40 }}>
+          {/* Diagonal lines overlay */}
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `repeating-linear-gradient(
+                45deg,
+                rgba(0, 255, 255, 0.4) 0px,
+                rgba(0, 255, 255, 0.4) 3px,
+                transparent 3px,
+                transparent 8px
+              )`,
+              border: '2px solid rgba(0, 255, 255, 0.8)',
+              boxShadow: '0 0 15px rgba(0, 255, 255, 0.6), inset 0 0 15px rgba(0, 255, 255, 0.3)'
+            }}
+          />
+          {/* Pulsing overlay for extra visibility */}
+          <motion.div
+            className="absolute inset-0 rounded-full"
+            animate={{
+              scale: [1, 1.05, 1],
+              opacity: [0.3, 0.6, 0.3]
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            style={{
+              border: '2px solid rgba(0, 255, 255, 0.9)',
+              backgroundColor: 'rgba(0, 255, 255, 0.1)'
+            }}
+          />
+        </div>
+      )}
       
       </div>
     </div>

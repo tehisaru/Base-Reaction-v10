@@ -63,7 +63,9 @@ interface ChainReactionState {
   hqs: HQCell[];
   powerUps: PowerUpCell[];
 
-
+  // Heart power-up selection mode
+  heartSelectionMode: boolean;
+  pendingHeartPlayer: PLAYER | null;
 
   // History for undo
   history: GameHistory[];
@@ -99,6 +101,10 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
   // Base mode specific
   hqs: [],
   powerUps: [],
+
+  // Heart power-up selection mode
+  heartSelectionMode: false,
+  pendingHeartPlayer: null,
 
 
 
@@ -428,10 +434,69 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
     const { 
       grid, currentPlayer, isBaseMode, 
       getCriticalMass, getNeighbors, 
-      powerUps, hqs, setAnimating
+      powerUps, hqs, setAnimating, 
+      heartSelectionMode, pendingHeartPlayer
     } = get();
 
     console.log(`Placing dot at (${row},${col}) for player ${currentPlayer}`);
+
+    // Handle heart power-up enemy selection
+    if (heartSelectionMode && pendingHeartPlayer === currentPlayer) {
+      // Check if clicked cell is an enemy HQ
+      const targetHQ = hqs.find(hq => hq.row === row && hq.col === col && hq.player !== currentPlayer);
+      if (targetHQ) {
+        console.log(`Heart: Selected enemy ${targetHQ.player} for damage`);
+        
+        // Damage the selected enemy
+        set(state => {
+          const newHqs = state.hqs.map(hq => 
+            hq.row === row && hq.col === col 
+              ? { ...hq, health: hq.health - 1 }
+              : hq
+          );
+
+          return {
+            ...state,
+            hqs: newHqs,
+            heartSelectionMode: false,
+            pendingHeartPlayer: null
+          };
+        });
+
+        // Store the damage effect for animation
+        setTimeout(() => {
+          set(state => ({
+            ...state,
+            lastHQDamaged: {
+              row: targetHQ.row,
+              col: targetHQ.col,
+              player: targetHQ.player,
+              timestamp: Date.now(),
+              type: 'damage' as const
+            }
+          }));
+        }, 0);
+
+        // Change turn after enemy selection
+        set(state => ({
+          currentPlayer: state.currentPlayer === PLAYER.RED ? 
+            PLAYER.BLUE : state.currentPlayer === PLAYER.BLUE ? 
+            PLAYER.VIOLET : state.currentPlayer === PLAYER.VIOLET ? 
+            PLAYER.BLACK : PLAYER.RED
+        }));
+
+        return; // Exit early, don't process as normal move
+      } else {
+        // Clicked on non-enemy HQ cell, cancel selection mode
+        console.log("Heart: Selection cancelled (clicked non-enemy HQ)");
+        set(state => ({
+          ...state,
+          heartSelectionMode: false,
+          pendingHeartPlayer: null
+        }));
+        return; // Exit early, don't process as normal move
+      }
+    }
 
     // Save current state to history before making changes
     const currentState = get();
@@ -512,7 +577,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         // Remove the power-up after use
         newPowerUps.splice(powerUpIndex, 1);
       } else if (powerUp && powerUp.type === 'heart') {
-        // NEW HEART POWER-UP LOGIC - Fresh implementation
+        // NEW HEART POWER-UP LOGIC
         console.log("Heart power-up used!");
         
         // Remove power-up first
@@ -524,7 +589,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           console.error("No HQ found for current player");
           // Continue with normal game flow even if no HQ found
         } else if (ownHQ.health < 5) {
-          // Heal self if below max health
+          // Case 1: Less than 5 health - heal yourself
           console.log("Heart: Healing own HQ");
           ownHQ.health += 1;
           
@@ -542,15 +607,12 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
             }));
           }, 0);
         } else {
-          // Player has 5 health - find enemy with least lives
+          // Case 2 & 3: 5 health - damage an enemy
           const enemyHQs = newHqs.filter(hq => hq.player !== currentPlayer);
-          if (enemyHQs.length > 0) {
-            // Find enemy with lowest health
-            const targetEnemy = enemyHQs.reduce((highest, current) => 
-              current.health > highest.health ? current : highest
-            );
-            
-            console.log(`Heart: Damaging enemy ${targetEnemy.player} with ${targetEnemy.health} health`);
+          if (enemyHQs.length === 1) {
+            // Case 2: Only one enemy - damage automatically
+            const targetEnemy = enemyHQs[0];
+            console.log(`Heart: Auto-damaging single enemy ${targetEnemy.player}`);
             targetEnemy.health -= 1;
             
             // Store the damage effect for animation
@@ -566,6 +628,17 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
                 }
               }));
             }, 0);
+          } else if (enemyHQs.length > 1) {
+            // Case 3: Multiple enemies - enter selection mode
+            console.log("Heart: Entering enemy selection mode");
+            // Return the state with heart selection mode enabled, but don't continue processing
+            return {
+              grid: newGrid,
+              powerUps: newPowerUps,
+              hqs: newHqs,
+              heartSelectionMode: true,
+              pendingHeartPlayer: currentPlayer
+            };
           }
         }
       } else {

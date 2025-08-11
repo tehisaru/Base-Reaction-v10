@@ -35,7 +35,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const [gameStarted, setGameStarted] = useState(false);
   const [scale, setScale] = useState(1);
   const { playHit } = useAudio();
-  const { lastHQDamaged } = useChainReaction();
+  const { lastHQDamaged, heartSelectionMode, pendingHeartPlayer } = useChainReaction();
   
   // Trigger entrance animation immediately when the component mounts
   useEffect(() => {
@@ -185,8 +185,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   isHQDamaged={isHQEffected && hqEffectType === 'damage'}
                   isHQHealed={isHQEffected && hqEffectType === 'heal'}
                   isHQDestroyed={isHQEffected && hqEffectType === 'destroyed'}
-                  heartSelectionMode={false}
-                  pendingHeartPlayer={undefined}
+                  heartSelectionMode={heartSelectionMode}
+                  pendingHeartPlayer={pendingHeartPlayer || undefined}
                 />
               </motion.div>
             );
