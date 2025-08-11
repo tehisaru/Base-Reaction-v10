@@ -396,7 +396,7 @@ class WeightsBasedAI {
     }
     
     // Bonus for connecting with own cells
-    score += ownAdjacent * 10;
+    score += ownAdjacent * 8;
     
     // Penalty for being surrounded by opponents
     if (opponentAdjacent >= 3) {

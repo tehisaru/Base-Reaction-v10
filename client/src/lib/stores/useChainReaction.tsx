@@ -443,9 +443,12 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
     // Handle heart power-up enemy selection
     if (heartSelectionMode && pendingHeartPlayer === currentPlayer) {
       console.log(`Heart selection mode active for player ${currentPlayer}, clicked on cell (${row},${col})`);
+      console.log(`All HQs:`, hqs.map(hq => `${hq.player} at (${hq.row},${hq.col})`));
       
       // Check if clicked cell is an enemy HQ
       const targetHQ = hqs.find(hq => hq.row === row && hq.col === col && hq.player !== currentPlayer);
+      console.log(`Target HQ found:`, targetHQ);
+      
       if (targetHQ) {
         console.log(`Heart: Selected enemy ${targetHQ.player} at (${row},${col}) for damage. Current health: ${targetHQ.health}`);
         
@@ -491,12 +494,24 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         return; // Exit early, don't process as normal move
       } else {
         // Clicked on non-enemy HQ cell, cancel selection mode
-        console.log("Heart: Selection cancelled (clicked non-enemy HQ)");
+        console.log("Heart: Selection cancelled (clicked on non-target cell)");
         set(state => ({
           ...state,
           heartSelectionMode: false,
           pendingHeartPlayer: null
         }));
+        
+        // Continue with normal turn switching after cancellation
+        const nextPlayer = currentPlayer === PLAYER.RED ? 
+          PLAYER.BLUE : currentPlayer === PLAYER.BLUE ? 
+          PLAYER.VIOLET : currentPlayer === PLAYER.VIOLET ? 
+          PLAYER.BLACK : PLAYER.RED;
+        
+        set(state => ({
+          ...state,
+          currentPlayer: nextPlayer
+        }));
+        
         return; // Exit early, don't process as normal move
       }
     }
