@@ -440,129 +440,71 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
 
     console.log(`Placing dot at (${row},${col}) for player ${currentPlayer}`);
 
-    // Handle heart power-up enemy selection
-    if (heartSelectionMode && pendingHeartPlayer === currentPlayer) {
-      console.log(`Heart selection mode active for player ${currentPlayer}, clicked on cell (${row},${col})`);
-      console.log(`All HQs:`, hqs.map(hq => `${hq.player} at (${hq.row},${hq.col})`));
+    // ROCK-SOLID HEART SELECTION LOGIC
+    if (heartSelectionMode) {
+      console.log(`🎯 HEART SELECTION: Player ${currentPlayer} clicked (${row},${col})`);
       
-      // Check if clicked cell is an enemy HQ
-      const targetHQ = hqs.find(hq => hq.row === row && hq.col === col && hq.player !== currentPlayer);
-      console.log(`Target HQ found:`, targetHQ);
+      // Find all HQs and log them
+      const allHQs = hqs;
+      console.log(`All HQs on board:`, allHQs);
       
-      if (targetHQ) {
-        console.log(`Heart: Selected enemy ${targetHQ.player} at (${row},${col}) for damage. Current health: ${targetHQ.health}`);
+      // Find the HQ at clicked position
+      const clickedHQ = allHQs.find(hq => hq.row === row && hq.col === col);
+      console.log(`Clicked HQ:`, clickedHQ);
+      
+      // Check if it's a valid enemy target
+      const isValidTarget = clickedHQ && clickedHQ.player !== currentPlayer;
+      console.log(`Is valid enemy target:`, isValidTarget);
+      
+      if (isValidTarget) {
+        console.log(`✅ DAMAGING ENEMY: ${clickedHQ.player} (health: ${clickedHQ.health} -> ${clickedHQ.health - 1})`);
         
-        // Get player settings using PlayerSettingsManager for proper turn rotation
-        let activePlayers: PLAYER[] = [PLAYER.RED, PLAYER.BLUE]; // Default
+        // Simple next player calculation
+        const nextPlayer = currentPlayer === PLAYER.RED ? PLAYER.BLUE : 
+                          currentPlayer === PLAYER.BLUE ? PLAYER.VIOLET : 
+                          currentPlayer === PLAYER.VIOLET ? PLAYER.BLACK : PLAYER.RED;
         
-        try {
-          const settings = PlayerSettingsManager.getSettings();
-          
-          if (settings.players && Array.isArray(settings.players) && settings.players.length > 0) {
-            activePlayers = settings.players;
-            console.log("Using player settings for heart selection turn rotation:", settings);
-          } else {
-            console.log("No valid player settings found, using defaults for heart selection");
-          }
-        } catch (error) {
-          console.log("Error getting player settings for heart selection:", error);
-        }
-        
-        // Filter out dead players (in base mode)
-        const livingHQPlayers = hqs
-          .filter(hq => hq.health > 0)
-          .map(hq => hq.player);
-          
-        activePlayers = activePlayers.filter(player => 
-          livingHQPlayers.includes(player)
+        // Update everything in one atomic operation
+        const newHqs = hqs.map(hq => 
+          hq.row === row && hq.col === col 
+            ? { ...hq, health: hq.health - 1 }
+            : hq
         );
         
-        // Calculate next player using proper rotation
-        let nextPlayer = currentPlayer;
-        if (activePlayers.length > 0) {
-          const currentIndex = activePlayers.indexOf(currentPlayer);
-          const safeCurrentIndex = currentIndex === -1 ? 0 : currentIndex;
-          const nextIndex = (safeCurrentIndex + 1) % activePlayers.length;
-          nextPlayer = activePlayers[nextIndex];
-        }
-
-        // Damage the selected enemy, change turn, and reset selection mode in one update
-        set(state => {
-          const newHqs = state.hqs.map(hq => 
-            hq.row === row && hq.col === col 
-              ? { ...hq, health: Math.max(0, hq.health - 1) }
-              : hq
-          );
-
-          console.log(`Heart damage applied. New health for ${targetHQ.player}: ${Math.max(0, targetHQ.health - 1)}`);
-
-          return {
-            ...state,
-            hqs: newHqs,
-            heartSelectionMode: false,
-            pendingHeartPlayer: null,
-            currentPlayer: nextPlayer
-          };
+        set({
+          ...get(),
+          hqs: newHqs,
+          heartSelectionMode: false,
+          pendingHeartPlayer: null,
+          currentPlayer: nextPlayer,
+          lastHQDamaged: {
+            row: row,
+            col: col,
+            player: clickedHQ.player,
+            timestamp: Date.now(),
+            type: 'damage' as const
+          }
         });
-
-        // Store the damage effect for animation
-        setTimeout(() => {
-          set(state => ({
-            ...state,
-            lastHQDamaged: {
-              row: targetHQ.row,
-              col: targetHQ.col,
-              player: targetHQ.player,
-              timestamp: Date.now(),
-              type: 'damage' as const
-            }
-          }));
-        }, 100); // Small delay to ensure state update completes first
-
-        return; // Exit early, don't process as normal move
+        
+        console.log(`🎯 HEART DAMAGE COMPLETE! Next player: ${nextPlayer}`);
+        return;
       } else {
-        // Clicked on non-enemy HQ cell, cancel selection mode
-        console.log("Heart: Selection cancelled (clicked on non-target cell)");
+        console.log(`❌ CANCELLING HEART SELECTION (invalid target)`);
         
-        // Get player settings for proper turn rotation
-        let activePlayers: PLAYER[] = [PLAYER.RED, PLAYER.BLUE]; // Default
+        // Cancel selection and advance turn
+        const nextPlayer = currentPlayer === PLAYER.RED ? PLAYER.BLUE : 
+                          currentPlayer === PLAYER.BLUE ? PLAYER.VIOLET : 
+                          currentPlayer === PLAYER.VIOLET ? PLAYER.BLACK : PLAYER.RED;
         
-        try {
-          const settings = PlayerSettingsManager.getSettings();
-          
-          if (settings.players && Array.isArray(settings.players) && settings.players.length > 0) {
-            activePlayers = settings.players;
-          }
-        } catch (error) {
-          console.log("Error getting player settings for heart selection cancellation:", error);
-        }
-        
-        // Filter out dead players
-        const livingHQPlayers = hqs
-          .filter(hq => hq.health > 0)
-          .map(hq => hq.player);
-          
-        activePlayers = activePlayers.filter(player => 
-          livingHQPlayers.includes(player)
-        );
-        
-        // Calculate next player
-        let nextPlayer = currentPlayer;
-        if (activePlayers.length > 0) {
-          const currentIndex = activePlayers.indexOf(currentPlayer);
-          const safeCurrentIndex = currentIndex === -1 ? 0 : currentIndex;
-          const nextIndex = (safeCurrentIndex + 1) % activePlayers.length;
-          nextPlayer = activePlayers[nextIndex];
-        }
-        
-        set(state => ({
-          ...state,
+        set({
+          ...get(),
           heartSelectionMode: false,
           pendingHeartPlayer: null,
           currentPlayer: nextPlayer
-        }));
+        });
         
-        return; // Exit early, don't process as normal move
+        console.log(`🎯 HEART SELECTION CANCELLED! Next player: ${nextPlayer}`);
+        return;
       }
     }
 
