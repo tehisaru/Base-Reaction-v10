@@ -75,7 +75,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
     
     // Start animation and then process the move
     setIsAnimating(true);
-    console.log(`Cell clicked: (${row},${col}), starting animation`);
+    console.log(`🎯 GameBoard.handleCellClick: (${row},${col}) - heartSelectionMode=${heartSelectionMode}, pendingHeartPlayer=${pendingHeartPlayer}`);
     
     // Process the move immediately but keep animation state
     onCellClick(row, col);

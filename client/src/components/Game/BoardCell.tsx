@@ -114,8 +114,12 @@ const BoardCell: React.FC<BoardCellProps> = ({
           zIndex: 2
         }}
         onClick={() => {
+          console.log(`🎯 BoardCell.onClick: (${row},${col}) - isValidMove=${isValidMove}, isHeartTarget=${isHeartTarget}, heartSelectionMode=${heartSelectionMode}`);
           if (isValidMove || isHeartTarget) {
+            console.log(`🎯 BoardCell: Calling onCellClick for (${row},${col})`);
             onCellClick(row, col);
+          } else {
+            console.log(`🎯 BoardCell: Click blocked for (${row},${col}) - not valid move or heart target`);
           }
         }}
       >
