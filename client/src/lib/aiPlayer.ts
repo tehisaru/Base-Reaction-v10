@@ -158,15 +158,80 @@ const evaluateStrategicMove = (
   const cell = grid[row][col];
   const criticalMass = calculateCriticalMass(row, col, rows, cols);
 
-  // 1. POWER-UP SCORING - AI values power-ups highly
+  // 1. POWER-UP SCORING - AI chases power-ups much more aggressively
   if (gameState.powerUps) {
     const powerUpAtPosition = gameState.powerUps.find(pu => pu.row === row && pu.col === col);
     if (powerUpAtPosition) {
-      evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 50 : 30; // Heart = 30, Diamond = 50
+      if (gameState.isBaseMode) {
+        // In base mode, power-ups are extremely valuable
+        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 80 : 60; // Much higher values
+      } else {
+        // In classic mode, still valuable but less critical
+        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 40 : 25;
+      }
+    }
+    
+    // Bonus for being near power-ups (chase them)
+    if (gameState.isBaseMode) {
+      gameState.powerUps.forEach(powerUp => {
+        const distanceToPowerUp = Math.abs(powerUp.row - row) + Math.abs(powerUp.col - col);
+        if (distanceToPowerUp <= 2) {
+          evaluation.powerUpScore += (3 - distanceToPowerUp) * 10; // Proximity bonus
+        }
+      });
     }
   }
 
-  // 2. AGGRESSIVE SCORING - Prioritize moves that capture enemy territory
+  // 2. POSITION SCORING - Different strategies for different game modes
+  const isCorner = (row === 0 || row === rows - 1) && (col === 0 || col === cols - 1);
+  const isEdge = row === 0 || row === rows - 1 || col === 0 || col === cols - 1;
+  
+  if (!gameState.isBaseMode) {
+    // CLASSIC MODE: Corners are very valuable, edges less so
+    if (isCorner) {
+      evaluation.territoryScore += 40; // High corner value for classic mode
+    } else if (isEdge) {
+      evaluation.territoryScore += 20; // Medium edge value for classic mode
+    } else {
+      evaluation.territoryScore += 5; // Low center value for classic mode
+    }
+    
+    // In classic mode, avoid placing next to enemy cells initially
+    const neighbors = getNeighborsForAI(row, col, rows, cols);
+    let enemyNeighborPenalty = 0;
+    neighbors.forEach(({nr, nc}) => {
+      const neighborCell = grid[nr][nc];
+      if (neighborCell.player && neighborCell.player !== currentPlayer) {
+        enemyNeighborPenalty += 15; // Penalty for being next to enemies in classic mode
+      }
+    });
+    evaluation.aggressiveScore -= enemyNeighborPenalty;
+    
+    // Encourage spreading to different areas in classic mode
+    let isolationBonus = 0;
+    let hasOwnNeighbor = false;
+    neighbors.forEach(({nr, nc}) => {
+      const neighborCell = grid[nr][nc];
+      if (neighborCell.player === currentPlayer) {
+        hasOwnNeighbor = true;
+      }
+    });
+    if (!hasOwnNeighbor) {
+      isolationBonus += 10; // Bonus for expanding to new areas
+    }
+    evaluation.territoryScore += isolationBonus;
+  } else {
+    // BASE MODE: Corners and edges are less important
+    if (isCorner) {
+      evaluation.territoryScore += 5; // Much lower corner value for base mode
+    } else if (isEdge) {
+      evaluation.territoryScore += 3; // Much lower edge value for base mode
+    } else {
+      evaluation.territoryScore += 8; // Higher center value for base mode
+    }
+  }
+
+  // 3. AGGRESSIVE SCORING - Prioritize moves that capture enemy territory
   let enemyCaptureCount = 0;
   let enemyProximityScore = 0;
   
@@ -182,19 +247,21 @@ const evaluateStrategicMove = (
     });
   }
 
-  // Check proximity to enemy positions for future aggressive moves
-  for (let r = Math.max(0, row - 2); r <= Math.min(rows - 1, row + 2); r++) {
-    for (let c = Math.max(0, col - 2); c <= Math.min(cols - 1, col + 2); c++) {
-      const targetCell = grid[r][c];
-      if (targetCell.player && targetCell.player !== currentPlayer) {
-        const distance = Math.abs(r - row) + Math.abs(c - col);
-        enemyProximityScore += (3 - distance) * targetCell.atoms * 3; // Closer = better
+  // Check proximity to enemy positions for future aggressive moves (only in base mode)
+  if (gameState.isBaseMode) {
+    for (let r = Math.max(0, row - 2); r <= Math.min(rows - 1, row + 2); r++) {
+      for (let c = Math.max(0, col - 2); c <= Math.min(cols - 1, col + 2); c++) {
+        const targetCell = grid[r][c];
+        if (targetCell.player && targetCell.player !== currentPlayer) {
+          const distance = Math.abs(r - row) + Math.abs(c - col);
+          enemyProximityScore += (3 - distance) * targetCell.atoms * 2; // Proximity bonus for base mode
+        }
       }
     }
   }
   evaluation.aggressiveScore += enemyProximityScore;
 
-  // 3. BASE THREAT SCORING - Prioritize moves that threaten enemy bases
+  // 4. BASE THREAT SCORING - Prioritize moves that threaten enemy bases
   if (gameState.isBaseMode && gameState.hqs) {
     gameState.hqs.forEach(hq => {
       if (hq.player !== currentPlayer) {
@@ -211,52 +278,63 @@ const evaluateStrategicMove = (
     });
   }
 
-  // 4. DEFENSIVE SCORING - Protect our own base when under threat
+  // 5. DEFENSIVE SCORING - Much stronger base defense
   if (gameState.isBaseMode && gameState.hqs) {
     const ourHQ = gameState.hqs.find(hq => hq.player === currentPlayer);
     if (ourHQ) {
       const distanceToOurHQ = Math.abs(ourHQ.row - row) + Math.abs(ourHQ.col - col);
       
-      // Check for enemy threats near our base
+      // Check for enemy threats near our base - extended range
       let enemyThreatNearBase = 0;
-      for (let r = Math.max(0, ourHQ.row - 2); r <= Math.min(rows - 1, ourHQ.row + 2); r++) {
-        for (let c = Math.max(0, ourHQ.col - 2); c <= Math.min(cols - 1, ourHQ.col + 2); c++) {
+      let criticalThreats = 0;
+      
+      for (let r = Math.max(0, ourHQ.row - 3); r <= Math.min(rows - 1, ourHQ.row + 3); r++) {
+        for (let c = Math.max(0, ourHQ.col - 3); c <= Math.min(cols - 1, ourHQ.col + 3); c++) {
           const threatCell = grid[r][c];
           if (threatCell.player && threatCell.player !== currentPlayer) {
-            enemyThreatNearBase += threatCell.atoms * 5;
+            const threatDistance = Math.abs(r - ourHQ.row) + Math.abs(c - ourHQ.col);
+            const threatMultiplier = Math.max(1, 4 - threatDistance);
+            enemyThreatNearBase += threatCell.atoms * threatMultiplier * 8; // Much higher threat weighting
+            
+            // Critical threats are very close and have many atoms
+            if (threatDistance <= 2 && threatCell.atoms >= 2) {
+              criticalThreats += threatCell.atoms * 15;
+            }
           }
         }
       }
       
-      // If there are threats near our base, prioritize defensive moves
-      if (enemyThreatNearBase > 0 && distanceToOurHQ <= 3) {
-        evaluation.defensiveScore += enemyThreatNearBase * (4 - distanceToOurHQ);
+      // Much stronger defensive response
+      if (enemyThreatNearBase > 0) {
+        const defensiveUrgency = Math.min(distanceToOurHQ, 4);
+        evaluation.defensiveScore += enemyThreatNearBase * (5 - defensiveUrgency) * 2; // Double the defensive priority
+        
+        // Critical threat response - highest priority
+        if (criticalThreats > 0 && distanceToOurHQ <= 3) {
+          evaluation.defensiveScore += criticalThreats * 3;
+        }
         
         // Extra bonus for converting enemy cells near our base
         if (cell.player && cell.player !== currentPlayer) {
-          evaluation.defensiveScore += 25;
+          evaluation.defensiveScore += 40; // Increased conversion bonus
+        }
+        
+        // Bonus for blocking enemy expansion towards our base
+        if (distanceToOurHQ <= 2) {
+          evaluation.defensiveScore += 30;
         }
       }
-    }
-  }
-
-  // 5. CHAIN REACTION SCORING - Look for massive chain reaction potential
-  const chainPotential = calculateChainReactionPotential(grid, row, col, currentPlayer);
-  evaluation.chainReactionScore = chainPotential * 10;
-
-  // 6. TERRITORY SCORING - Expand our controlled area
-  let territoryControl = 0;
-  for (let r = Math.max(0, row - 1); r <= Math.min(rows - 1, row + 1); r++) {
-    for (let c = Math.max(0, col - 1); c <= Math.min(cols - 1, col + 1); c++) {
-      const territoryCell = grid[r][c];
-      if (territoryCell.player === currentPlayer) {
-        territoryControl += 2;
-      } else if (territoryCell.player === null) {
-        territoryControl += 1;
+      
+      // When base health is low, increase defensive priority even more
+      if (ourHQ.health <= 2) {
+        evaluation.defensiveScore *= 2; // Double all defensive scores when health is critical
       }
     }
   }
-  evaluation.territoryScore = territoryControl;
+
+  // 6. CHAIN REACTION SCORING - Look for massive chain reaction potential
+  const chainPotential = calculateChainReactionPotential(grid, row, col, currentPlayer);
+  evaluation.chainReactionScore = chainPotential * 10;
 
   return evaluation;
 };
@@ -335,26 +413,43 @@ class AggressiveStrategicAI {
     // PRIORITY 1: Power-ups are extremely valuable
     baseScore += evaluation.powerUpScore * 2.0;
     
-    // PRIORITY 2: Aggressive expansion and enemy capture
-    baseScore += evaluation.aggressiveScore * 1.5;
+    // PRIORITY 2: Territory control (corners/edges/positioning)
+    baseScore += evaluation.territoryScore * 1.2;
     
-    // PRIORITY 3: Threaten enemy bases
-    baseScore += evaluation.baseThreatScore * 1.8;
-    
-    // PRIORITY 4: Chain reactions for massive damage
-    baseScore += evaluation.chainReactionScore * 1.3;
-    
-    // PRIORITY 5: Territory control
-    baseScore += evaluation.territoryScore * 0.8;
-    
-    // PRIORITY 6: Defense only when necessary
+    // PRIORITY 3: Defense has higher priority when there are threats
     if (evaluation.defensiveScore > 0) {
-      // Only prioritize defense if there's a real threat
-      baseScore += evaluation.defensiveScore * 1.0;
+      baseScore += evaluation.defensiveScore * 2.5; // Much higher defensive priority
     }
+    
+    // PRIORITY 4: Aggressive expansion and enemy capture
+    baseScore += evaluation.aggressiveScore * 1.3;
+    
+    // PRIORITY 5: Threaten enemy bases
+    baseScore += evaluation.baseThreatScore * 1.5;
+    
+    // PRIORITY 6: Chain reactions for massive damage
+    baseScore += evaluation.chainReactionScore * 1.1;
+    
+    // Add randomness to prevent predictable behavior
+    const randomnessFactor = this.getRandomnessFactor(difficulty);
+    const randomness = (Math.random() - 0.5) * 2 * randomnessFactor; // -randomnessFactor to +randomnessFactor
+    baseScore += randomness * Math.max(10, baseScore * 0.1); // Scale randomness with move quality
     
     // Apply difficulty scaling
     return baseScore * multiplier;
+  }
+
+  private getRandomnessFactor(difficulty: AI_STRATEGY): number {
+    switch (difficulty) {
+      case AI_STRATEGY.EASY:
+        return 0.4; // High randomness for easy AI
+      case AI_STRATEGY.MEDIUM:
+        return 0.25; // Medium randomness
+      case AI_STRATEGY.HARD:
+        return 0.15; // Low randomness for hard AI
+      default:
+        return 0.2;
+    }
   }
 
   getBestMove(
@@ -427,7 +522,7 @@ export const getAIMove = (
   isBaseMode: boolean,
   hqs?: HQCell[],
   strategy: AI_STRATEGY = AI_STRATEGY.HARD,
-  powerUps?: PowerUp[]
+  powerUps?: PowerUpCell[]
 ): AIMove | null => {
   console.log(`🎯 AI ${currentPlayer} starting move calculation with strategy: ${strategy}`);
   
