@@ -522,62 +522,51 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         const ownHQ = newHqs.find(hq => hq.player === currentPlayer);
         if (!ownHQ) {
           console.error("No HQ found for current player");
-          return state;
-        }
-        
-        if (ownHQ.health < 5) {
+          // Continue with normal game flow even if no HQ found
+        } else if (ownHQ.health < 5) {
           // Heal self if below max health
           console.log("Heart: Healing own HQ");
           ownHQ.health += 1;
           
-          const healEffect = {
-            row: ownHQ.row,
-            col: ownHQ.col,
-            player: ownHQ.player,
-            timestamp: Date.now(),
-            type: 'heal' as const
-          };
-          
-          set(state => ({
-            ...state,
-            lastHQDamaged: healEffect,
-            grid: newGrid,
-            hqs: newHqs,
-            powerUps: newPowerUps
-          }));
-          return state;
+          // Store the heal effect for animation
+          setTimeout(() => {
+            set(state => ({
+              ...state,
+              lastHQDamaged: {
+                row: ownHQ.row,
+                col: ownHQ.col,
+                player: ownHQ.player,
+                timestamp: Date.now(),
+                type: 'heal' as const
+              }
+            }));
+          }, 0);
         } else {
           // Player has 5 health - find enemy with least lives
           const enemyHQs = newHqs.filter(hq => hq.player !== currentPlayer);
-          if (enemyHQs.length === 0) {
-            console.log("No enemies found");
-            return state;
+          if (enemyHQs.length > 0) {
+            // Find enemy with lowest health
+            const targetEnemy = enemyHQs.reduce((lowest, current) => 
+              current.health < lowest.health ? current : lowest
+            );
+            
+            console.log(`Heart: Damaging enemy ${targetEnemy.player} with ${targetEnemy.health} health`);
+            targetEnemy.health -= 1;
+            
+            // Store the damage effect for animation
+            setTimeout(() => {
+              set(state => ({
+                ...state,
+                lastHQDamaged: {
+                  row: targetEnemy.row,
+                  col: targetEnemy.col,
+                  player: targetEnemy.player,
+                  timestamp: Date.now(),
+                  type: 'damage' as const
+                }
+              }));
+            }, 0);
           }
-          
-          // Find enemy with lowest health
-          const targetEnemy = enemyHQs.reduce((lowest, current) => 
-            current.health < lowest.health ? current : lowest
-          );
-          
-          console.log(`Heart: Damaging enemy ${targetEnemy.player} with ${targetEnemy.health} health`);
-          targetEnemy.health -= 1;
-          
-          const damageEffect = {
-            row: targetEnemy.row,
-            col: targetEnemy.col,
-            player: targetEnemy.player,
-            timestamp: Date.now(),
-            type: 'damage' as const
-          };
-          
-          set(state => ({
-            ...state,
-            lastHQDamaged: damageEffect,
-            grid: newGrid,
-            hqs: newHqs,
-            powerUps: newPowerUps
-          }));
-          return state;
         }
       } else {
         // Normal move - add a dot to the selected cell
