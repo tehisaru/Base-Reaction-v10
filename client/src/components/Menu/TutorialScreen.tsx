@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 interface TutorialScreenProps {
-  mode: "classic" | "base-reaction";
+  mode: "chain-reaction" | "base-reaction";
   onBack?: () => void; // Optional callback to handle back navigation
 }
 
@@ -15,11 +15,11 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
   return (
     <div className="min-h-screen bg-black p-4 py-8" style={{ maxHeight: "100vh" }}>
       <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center text-white" style={typewriterFont}>
-        {mode === "classic" ? "Classic Mode" : "Base Reaction Mode"} Tutorial
+        {mode === "chain-reaction" ? "Chain Reaction Mode" : "Base Reaction Mode"} Tutorial
       </h1>
       <div className="max-w-3xl mx-auto text-white p-4 md:p-6" style={{ transition: "all 0.3s ease" }}>
         
-        {mode === "classic" ? (
+        {mode === "chain-reaction" ? (
           <div className="space-y-4">
             <section>
               <h2 className="text-lg font-semibold mb-2" style={typewriterFont}>How to Play</h2>
@@ -81,21 +81,10 @@ const TutorialScreen: React.FC<TutorialScreenProps> = ({ mode, onBack }) => {
             className="py-4 px-8 rounded-2xl text-white bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white w-full md:w-auto"
             style={typewriterFont}
           >
-            Back to Menu
+            Back
           </motion.button>
           
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              // Navigate to the multiplayer setup for the specific mode
-              navigate("/", { state: { selectedMode: mode, openMultiplayer: true } });
-            }}
-            className="py-4 px-8 rounded-2xl text-white bg-black hover:bg-gray-800 transition-all duration-200 border-2 border-white w-full md:w-auto"
-            style={typewriterFont}
-          >
-            Play {mode === "classic" ? "Classic" : "Base Reaction"}
-          </motion.button>
+    
         </div>
       </div>
     </div>

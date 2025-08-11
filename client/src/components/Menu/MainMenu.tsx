@@ -148,12 +148,12 @@ const MainMenu: React.FC = () => {
     }
     return 'main';
   });
-  const [tutorialMode, setTutorialMode] = useState<'classic' | 'base-reaction'>('classic');
-  const [selectedMode, setSelectedMode] = useState<'classic' | 'base-reaction'>(() => {
+  const [tutorialMode, setTutorialMode] = useState<'chain-reaction' | 'base-reaction'>('classic');
+  const [selectedMode, setSelectedMode] = useState<'chain-reaction' | 'base-reaction'>(() => {
     if (navigationState?.selectedMode) {
       return navigationState.selectedMode;
     }
-    return 'classic';
+    return 'chain-reaction';
   });
   const [aiStrategy, setAIStrategy] = useState<AI_STRATEGY>(AI_STRATEGY.WEIGHTS_BASED);
   
@@ -289,20 +289,7 @@ const MainMenu: React.FC = () => {
           className="bg-black p-6 md:p-8 w-full max-w-sm md:w-80"
         >
           <div className="grid grid-cols-1 gap-4 w-full">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.1 }}
-              onClick={() => {
-                setSelectedMode('classic');
-                setMenuScreen('multiplayer');
-              }}
-              className={`${buttonStyle.base} ${buttonStyle.primary}`}
-              style={{ fontFamily: 'Menlo, monospace' }}
-            >
-              Classic Mode
-            </motion.button>
-            
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -316,7 +303,21 @@ const MainMenu: React.FC = () => {
             >
               Base Reaction
             </motion.button>
-            
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.1 }}
+              onClick={() => {
+                setSelectedMode('classic');
+                setMenuScreen('multiplayer');
+              }}
+              className={`${buttonStyle.base} ${buttonStyle.primary}`}
+              style={{ fontFamily: 'Menlo, monospace' }}
+            >
+              Chain Reaction
+            </motion.button>
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -327,8 +328,10 @@ const MainMenu: React.FC = () => {
             >
               Tutorial
             </motion.button>
+            
           </div>
         </motion.div>
+      
       )}
       
       {/* Game Mode Selection Screen */}
@@ -340,7 +343,7 @@ const MainMenu: React.FC = () => {
           className="bg-black p-6 md:p-8 w-full max-w-sm md:w-80"
         >
           <h2 className="text-xl font-bold mb-4 text-center" style={{ fontFamily: 'Menlo, monospace' }}>
-            {selectedMode === 'classic' ? 'Classic Mode' : 'Base Reaction Mode'}
+            {selectedMode === 'chain-reaction' ? 'Chain Reaction Mode' : 'Base Reaction Mode'}
           </h2>
           
           <div className="grid grid-cols-1 gap-3 mb-4">
@@ -445,7 +448,7 @@ const MainMenu: React.FC = () => {
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
-              Classic Mode
+              Chain Reaction 
             </motion.button>
             
             <motion.button
@@ -458,7 +461,7 @@ const MainMenu: React.FC = () => {
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
-              Base Reaction Mode
+              Base Reaction
             </motion.button>
           </div>
           

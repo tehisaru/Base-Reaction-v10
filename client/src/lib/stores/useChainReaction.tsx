@@ -546,8 +546,8 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
           const enemyHQs = newHqs.filter(hq => hq.player !== currentPlayer);
           if (enemyHQs.length > 0) {
             // Find enemy with lowest health
-            const targetEnemy = enemyHQs.reduce((lowest, current) => 
-              current.health < lowest.health ? current : lowest
+            const targetEnemy = enemyHQs.reduce((highest, current) => 
+              current.health > highest.health ? current : highest
             );
             
             console.log(`Heart: Damaging enemy ${targetEnemy.player} with ${targetEnemy.health} health`);
