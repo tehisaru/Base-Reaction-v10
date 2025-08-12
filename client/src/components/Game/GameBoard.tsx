@@ -131,14 +131,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
         animate={gameStarted ? "visible" : "hidden"}
         variants={boardContainerVariants}
         style={{ 
-          width: cols * CELL_SIZE + cols * 2 + 24,
-          height: rows * CELL_SIZE + rows * 2 + 24,
+          width: cols * CELL_SIZE + (cols - 1) * 2 + 4,
+          height: rows * CELL_SIZE + (rows - 1) * 2 + 4,
           background: "rgba(255, 255, 255, 0.05)",
           border: "none",
           boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)",
           transformOrigin: 'center',
           transform: `scale(${scale})`,
-          padding: '10px',
+          padding: '2px',
           borderRadius: '16px'
         }}
       >
