@@ -138,14 +138,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
           boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)",
           transformOrigin: 'center',
           transform: `scale(${scale})`,
-          padding: '12px',
+          padding: '10px',
           borderRadius: '16px'
         }}
       >
 
         
       {grid.map((rowCells, rowIndex) => (
-        <div key={`row-${rowIndex}`} className="flex gap-[2px]" style={{ zIndex: 10, position: 'relative', marginBottom: '2px' }}>
+        <div key={`row-${rowIndex}`} className="flex gap-[2px]" style={{ zIndex: 10, position: 'relative', marginBottom: rowIndex < rows - 1 ? '5px' : '0' }}>
           {rowCells.map((cell, colIndex) => {
             const powerUpType = getPowerUpType(rowIndex, colIndex);
             const { isHQ, health } = getHQInfo(rowIndex, colIndex);
