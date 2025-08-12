@@ -28,8 +28,8 @@ export type PlayerSelectionSettings = {
 // Default player assignments by count
 export const playerAssignments = {
   2: [PLAYER.RED, PLAYER.BLUE],
-  3: [PLAYER.RED, PLAYER.BLUE, PLAYER.VIOLET],
-  4: [PLAYER.RED, PLAYER.BLUE, PLAYER.VIOLET, PLAYER.BLACK]
+  3: [PLAYER.RED, PLAYER.BLUE, PLAYER.ORANGE],
+  4: [PLAYER.RED, PLAYER.BLUE, PLAYER.ORANGE, PLAYER.BLACK]
 };
 
 // Create default player configurations - all human players for multiplayer

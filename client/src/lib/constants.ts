@@ -1,7 +1,7 @@
 export enum PLAYER {
   RED = "red",
   BLUE = "blue",
-  VIOLET = "violet",
+  ORANGE = "orange",
   BLACK = "black"
 }
 
@@ -15,18 +15,18 @@ export const PLAYER_COLORS = {
   [PLAYER.BLUE]: "rgb(55, 114, 255)",   // Royal blue
   [PLAYER.RED]: "rgb(223, 41, 53)",     // Bright red
   [PLAYER.BLACK]: "rgb(8, 7, 8)",      // Black
-  [PLAYER.VIOLET]: "rgb(255, 115, 0)"  // Violet purple
+  [PLAYER.ORANGE]: "rgb(255, 115, 0)"  // Violet purple
 };
 
 export const PLAYER_BG_COLORS = {
-  [PLAYER.BLUE]: "rgb(27, 57, 128)",    // Darker royal blue
-  [PLAYER.RED]: "rgb(112, 20, 26)",     // Darker bright red
+  [PLAYER.BLUE]: "rgb(13, 27, 64)",    // Darker royal blue
+  [PLAYER.RED]: "rgb(56, 10, 13)",     // Darker bright red
   [PLAYER.BLACK]: "rgb(10, 10, 10)",    // Darker black
-  [PLAYER.VIOLET]: "rgb(130, 58, 0)"   // Darker violet purple
+  [PLAYER.ORANGE]: "rgb(85, 37, 0)"   // Darker orange purple
 };
 
 export const CELL_SIZE = 60;
-export const DOT_SIZE = 15;
+export const DOT_SIZE = 20;
 export const DOT_MARGIN = 5;
 
 export const DOT_POSITIONS = {

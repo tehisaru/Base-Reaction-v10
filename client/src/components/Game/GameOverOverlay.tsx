@@ -40,7 +40,7 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
             {winner === PLAYER.RED ? "Red" : 
              winner === PLAYER.BLUE ? "Blue" : 
              winner === PLAYER.BLACK ? "Black" : 
-             winner === PLAYER.VIOLET ? "Yellow" : "Player"} wins!
+             winner === PLAYER.ORANGE ? "Yellow" : "Player"} wins!
           </p>
         </div>
         

@@ -461,8 +461,8 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         
         // Simple next player calculation
         const nextPlayer = currentPlayer === PLAYER.RED ? PLAYER.BLUE : 
-                          currentPlayer === PLAYER.BLUE ? PLAYER.VIOLET : 
-                          currentPlayer === PLAYER.VIOLET ? PLAYER.BLACK : PLAYER.RED;
+                          currentPlayer === PLAYER.BLUE ? PLAYER.ORANGE : 
+                          currentPlayer === PLAYER.ORANGE ? PLAYER.BLACK : PLAYER.RED;
         
         // Update everything in one atomic operation
         const newHqs = hqs.map(hq => 
@@ -493,8 +493,8 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         
         // Cancel selection and advance turn
         const nextPlayer = currentPlayer === PLAYER.RED ? PLAYER.BLUE : 
-                          currentPlayer === PLAYER.BLUE ? PLAYER.VIOLET : 
-                          currentPlayer === PLAYER.VIOLET ? PLAYER.BLACK : PLAYER.RED;
+                          currentPlayer === PLAYER.BLUE ? PLAYER.ORANGE : 
+                          currentPlayer === PLAYER.ORANGE ? PLAYER.BLACK : PLAYER.RED;
         
         set({
           ...get(),
@@ -657,8 +657,8 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         // For heart power-up, complete the turn immediately (no dots or explosions)
         return set(state => {
           const nextPlayer = currentPlayer === PLAYER.RED ? PLAYER.BLUE : 
-                            currentPlayer === PLAYER.BLUE ? PLAYER.VIOLET : 
-                            currentPlayer === PLAYER.VIOLET ? PLAYER.BLACK : PLAYER.RED;
+                            currentPlayer === PLAYER.BLUE ? PLAYER.ORANGE : 
+                            currentPlayer === PLAYER.ORANGE ? PLAYER.BLACK : PLAYER.RED;
           
           return {
             ...state,

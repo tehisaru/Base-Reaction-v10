@@ -408,7 +408,7 @@ const calculateChainReactionPotential = (
  */
 function generateAIPersonality(): AIPersonality {
   // Choose a random enemy to target (will be set when AI gets initialized with opponents)
-  const possibleEnemies = [PLAYER.RED, PLAYER.BLUE, PLAYER.VIOLET, PLAYER.BLACK];
+  const possibleEnemies = [PLAYER.RED, PLAYER.BLUE, PLAYER.ORANGE, PLAYER.BLACK];
   const targetEnemy = possibleEnemies[Math.floor(Math.random() * possibleEnemies.length)];
   
   return {
@@ -434,7 +434,7 @@ class PersonalityBasedAI {
     if (!this.personalities.has(player)) {
       const personality = generateAIPersonality();
       // Set target enemy to a different player
-      const possibleEnemies = [PLAYER.RED, PLAYER.BLUE, PLAYER.VIOLET, PLAYER.BLACK].filter(p => p !== player);
+      const possibleEnemies = [PLAYER.RED, PLAYER.BLUE, PLAYER.ORANGE, PLAYER.BLACK].filter(p => p !== player);
       personality.targetEnemy = possibleEnemies[Math.floor(Math.random() * possibleEnemies.length)];
       
       this.personalities.set(player, personality);
@@ -572,8 +572,8 @@ class PersonalityBasedAI {
   getNextPlayer(current: PLAYER): PLAYER {
     switch (current) {
       case PLAYER.RED: return PLAYER.BLUE;
-      case PLAYER.BLUE: return PLAYER.VIOLET;
-      case PLAYER.VIOLET: return PLAYER.BLACK;
+      case PLAYER.BLUE: return PLAYER.ORANGE;
+      case PLAYER.ORANGE: return PLAYER.BLACK;
       case PLAYER.BLACK: return PLAYER.RED;
     }
   }
