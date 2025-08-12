@@ -587,7 +587,7 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
         // Remove the power-up after use
         newPowerUps.splice(powerUpIndex, 1);
       } else if (powerUp && powerUp.type === 'heart') {
-        // NEW HEART POWER-UP LOGIC
+        // NEW HEART POWER-UP LOGIC - NO DOT PLACEMENT
         console.log("Heart power-up used!");
         
         // Remove power-up first
@@ -651,6 +651,23 @@ export const useChainReaction = create<ChainReactionState>((set, get) => ({
             };
           }
         }
+        
+        // For heart power-up, skip normal dot placement - no explosion check needed
+        
+        // For heart power-up, complete the turn immediately (no dots or explosions)
+        return set(state => {
+          const nextPlayer = currentPlayer === PLAYER.RED ? PLAYER.BLUE : 
+                            currentPlayer === PLAYER.BLUE ? PLAYER.VIOLET : 
+                            currentPlayer === PLAYER.VIOLET ? PLAYER.BLACK : PLAYER.RED;
+          
+          return {
+            ...state,
+            grid: newGrid,
+            powerUps: newPowerUps,
+            hqs: newHqs,
+            currentPlayer: nextPlayer
+          };
+        });
       } else {
         // Normal move - add a dot to the selected cell
         if (newGrid[row][col].player !== currentPlayer && newGrid[row][col].player !== null) {

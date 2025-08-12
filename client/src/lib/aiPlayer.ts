@@ -33,11 +33,12 @@ interface StrategicEvaluation {
 interface AIPersonality {
   aggressiveness: number;      // 0.2-2.5 (how much AI prioritizes attacks)
   defensiveness: number;       // 0.2-2.5 (how much AI prioritizes defense)
-  riskTaking: number;          // 0.2-2.5 (how much AI takes risky moves)
+  baseHuntingThirst: number;   // 0.2-3.0 (how much AI wants to attack chosen enemy base)
   powerUpHunting: number;      // 0.8-3.0 (how much AI chases power-ups)
   territorialness: number;     // 0.2-2.5 (how much AI values territory)
   cornerPreference: number;    // 0.1-2.0 (preference for corners, can be very low to prevent obsession)
   spreadTendency: number;      // 0.2-2.5 (tendency to spread vs consolidate)
+  targetEnemy: PLAYER | null;  // Chosen enemy to focus attacks on
 }
 
 /**
@@ -171,15 +172,15 @@ const evaluateStrategicMove = (
   if (gameState.isBaseMode && gameState.powerUps) {
     const powerUpAtPosition = gameState.powerUps.find(pu => pu.row === row && pu.col === col);
     if (powerUpAtPosition) {
-        // Power-ups are EXTREMELY valuable - AI should prioritize these highly
-        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 150 : 150; // Much higher values
+        // Power-ups are MASSIVELY valuable - AI should prioritize these above almost everything
+        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 1000 : 1000; // MASSIVE values
     }
 
-    // Strong bonus for being near power-ups - AI should chase them aggressively  
+    // Extremely strong bonus for being near power-ups - AI should chase them obsessively
     gameState.powerUps.forEach(powerUp => {
       const distanceToPowerUp = Math.abs(powerUp.row - row) + Math.abs(powerUp.col - col);
-      if (distanceToPowerUp <= 3) {
-        evaluation.powerUpScore += (4 - distanceToPowerUp) * 25; // Much stronger proximity bonus
+      if (distanceToPowerUp <= 4) {
+        evaluation.powerUpScore += (5 - distanceToPowerUp) * 100; // MUCH stronger proximity bonus
       }
     });
   }
@@ -271,17 +272,24 @@ const evaluateStrategicMove = (
   }
   evaluation.aggressiveScore += enemyProximityScore;
 
-  // 4. BASE THREAT SCORING - Prioritize moves that threaten enemy bases
+  // 4. BASE THREAT SCORING - Prioritize moves that threaten enemy bases, ESPECIALLY chosen target
   if (gameState.isBaseMode && gameState.hqs) {
     gameState.hqs.forEach(hq => {
       if (hq.player !== currentPlayer) {
         const distanceToHQ = Math.abs(hq.row - row) + Math.abs(hq.col - col);
         if (distanceToHQ <= 3) {
-          evaluation.baseThreatScore += (4 - distanceToHQ) * 20; // Closer to enemy HQ = much better
+          let baseThreatValue = (4 - distanceToHQ) * 20; // Base threat value
+          
+          // MASSIVE bonus if this is our chosen target enemy
+          // (This logic will be applied in evaluateMove function)
+          baseThreatValue = baseThreatValue; // Keep base value for now
+          
+          evaluation.baseThreatScore += baseThreatValue;
           
           // Extra bonus for moves that could explode near enemy HQ
           if (cell.atoms + 1 >= criticalMass && distanceToHQ <= 2) {
-            evaluation.baseThreatScore += 40;
+            const explosionBonus = hq.player === currentPlayer ? 120 : 40; // Much higher for target
+            evaluation.baseThreatScore += explosionBonus;
           }
         }
       }
@@ -399,14 +407,19 @@ const calculateChainReactionPotential = (
  * Generates a random AI personality for each game to prevent predictable behavior
  */
 function generateAIPersonality(): AIPersonality {
+  // Choose a random enemy to target (will be set when AI gets initialized with opponents)
+  const possibleEnemies = [PLAYER.RED, PLAYER.BLUE, PLAYER.VIOLET, PLAYER.BLACK];
+  const targetEnemy = possibleEnemies[Math.floor(Math.random() * possibleEnemies.length)];
+  
   return {
     aggressiveness: 0.2 + Math.random() * 2.3,      // 0.2-2.5 (MUCH MORE EXTREME)
     defensiveness: 0.2 + Math.random() * 2.3,       // 0.2-2.5 (MUCH MORE EXTREME)
-    riskTaking: 0.2 + Math.random() * 2.3,          // 0.2-2.5 (MUCH MORE EXTREME)
+    baseHuntingThirst: 0.2 + Math.random() * 2.8,   // 0.2-3.0 (EXTREMELY HIGH base hunting)
     powerUpHunting: 0.8 + Math.random() * 2.2,      // 0.8-3.0 (Very high power-up chasing)
     territorialness: 0.2 + Math.random() * 2.3,     // 0.2-2.5 (MUCH MORE EXTREME)
     cornerPreference: 0.1 + Math.random() * 1.9,    // 0.1-2.0 (MUCH MORE EXTREME, can be very low)
-    spreadTendency: 0.2 + Math.random() * 2.3       // 0.2-2.5 (MUCH MORE EXTREME)
+    spreadTendency: 0.2 + Math.random() * 2.3,      // 0.2-2.5 (MUCH MORE EXTREME)
+    targetEnemy: targetEnemy                        // Random enemy to focus on
   };
 }
 
@@ -419,7 +432,12 @@ class PersonalityBasedAI {
   
   getPersonality(player: PLAYER): AIPersonality {
     if (!this.personalities.has(player)) {
-      this.personalities.set(player, generateAIPersonality());
+      const personality = generateAIPersonality();
+      // Set target enemy to a different player
+      const possibleEnemies = [PLAYER.RED, PLAYER.BLUE, PLAYER.VIOLET, PLAYER.BLACK].filter(p => p !== player);
+      personality.targetEnemy = possibleEnemies[Math.floor(Math.random() * possibleEnemies.length)];
+      
+      this.personalities.set(player, personality);
       console.log(`🎭 Generated new personality for ${player}:`, this.personalities.get(player));
     }
     return this.personalities.get(player)!;
@@ -437,30 +455,127 @@ class PersonalityBasedAI {
     currentPlayer: PLAYER,
     gameState: GameState
   ): number {
+    // Handle full board evaluation case for minimax
+    if (row === -1 && col === -1) {
+      let totalScore = 0;
+      for (let r = 0; r < grid.length; r++) {
+        for (let c = 0; c < grid[0].length; c++) {
+          if (grid[r][c].player === currentPlayer) {
+            totalScore += grid[r][c].atoms * 10;
+          }
+        }
+      }
+      return totalScore;
+    }
+
     const evaluation = evaluateStrategicMove(grid, row, col, currentPlayer, gameState);
     const personality = this.getPersonality(currentPlayer);
+    
+    // Check if this move threatens our chosen target enemy
+    let targetEnemyBonus = 0;
+    if (gameState.isBaseMode && gameState.hqs && personality.targetEnemy) {
+      const targetHQ = gameState.hqs.find(hq => hq.player === personality.targetEnemy);
+      if (targetHQ) {
+        const distanceToTarget = Math.abs(targetHQ.row - row) + Math.abs(targetHQ.col - col);
+        if (distanceToTarget <= 3) {
+          targetEnemyBonus = (4 - distanceToTarget) * 50 * personality.baseHuntingThirst; // MASSIVE target focus
+        }
+        
+        // Double the base threat score if targeting our chosen enemy
+        if (targetHQ.player === personality.targetEnemy) {
+          evaluation.baseThreatScore *= 2;
+        }
+      }
+    }
     
     // Calculate base score with personality-influenced priorities
     let baseScore = 0;
     
-    // Apply personality traits to scoring
-    baseScore += evaluation.powerUpScore * personality.powerUpHunting * 1.8;
+    // Apply personality traits to scoring with massive power-up emphasis
+    baseScore += evaluation.powerUpScore * personality.powerUpHunting * 3.0; // MASSIVE power-up multiplier
     baseScore += evaluation.territoryScore * personality.territorialness * personality.cornerPreference * 0.8;
     baseScore += evaluation.defensiveScore * personality.defensiveness * 2.0;
     baseScore += evaluation.aggressiveScore * personality.aggressiveness * 1.5;
-    baseScore += evaluation.baseThreatScore * personality.aggressiveness * personality.riskTaking * 1.2;
-    baseScore += evaluation.chainReactionScore * personality.riskTaking * 1.3;
+    baseScore += evaluation.baseThreatScore * personality.aggressiveness * personality.baseHuntingThirst * 2.0; // Focus on chosen enemy
+    baseScore += evaluation.chainReactionScore * personality.baseHuntingThirst * 1.3;
+    baseScore += targetEnemyBonus; // Extra focus on chosen target
     
-    // Add significant randomness based on risk-taking personality
-    const baseRandomness = personality.riskTaking * 0.3; // 0.15-0.45
+    // Add significant randomness based on base-hunting personality
+    const baseRandomness = personality.baseHuntingThirst * 0.3; // 0.06-0.9
     const randomness = (Math.random() - 0.5) * 2 * baseRandomness;
     baseScore += randomness * Math.max(15, Math.abs(baseScore) * 0.2);
     
     // Additional chaos factor to prevent identical games
-    const chaosBonus = (Math.random() - 0.5) * 25 * personality.riskTaking;
+    const chaosBonus = (Math.random() - 0.5) * 25 * personality.baseHuntingThirst;
     baseScore += chaosBonus;
     
     return baseScore;
+  }
+
+  // Simple minimax with alpha-beta pruning (3 levels deep)
+  minimax(
+    grid: GridCell[][],
+    depth: number,
+    isMaximizing: boolean,
+    alpha: number,
+    beta: number,
+    currentPlayer: PLAYER,
+    gameState: GameState
+  ): number {
+    if (depth === 0) {
+      return this.evaluateMove(grid, -1, -1, currentPlayer, gameState); // Full board evaluation
+    }
+
+    const validMoves = this.getValidMoves(grid, currentPlayer, gameState.isBaseMode, gameState.hqs);
+    
+    if (isMaximizing) {
+      let maxEval = -Infinity;
+      for (const move of validMoves) {
+        const newGrid = this.simulateMove(grid, move.row, move.col, currentPlayer);
+        const evaluation = this.minimax(newGrid, depth - 1, false, alpha, beta, this.getNextPlayer(currentPlayer), gameState);
+        maxEval = Math.max(maxEval, evaluation);
+        alpha = Math.max(alpha, evaluation);
+        if (beta <= alpha) break; // Alpha-beta pruning
+      }
+      return maxEval;
+    } else {
+      let minEval = Infinity;
+      for (const move of validMoves) {
+        const newGrid = this.simulateMove(grid, move.row, move.col, currentPlayer);
+        const evaluation = this.minimax(newGrid, depth - 1, true, alpha, beta, this.getNextPlayer(currentPlayer), gameState);
+        minEval = Math.min(minEval, evaluation);
+        beta = Math.min(beta, evaluation);
+        if (beta <= alpha) break; // Alpha-beta pruning
+      }
+      return minEval;
+    }
+  }
+
+  getValidMoves(grid: GridCell[][], player: PLAYER, isBaseMode: boolean, hqs?: HQCell[]): AIMove[] {
+    const moves: AIMove[] = [];
+    for (let row = 0; row < grid.length; row++) {
+      for (let col = 0; col < grid[0].length; col++) {
+        if (isValidMoveForAI(grid, row, col, player, isBaseMode, hqs)) {
+          moves.push({ row, col, score: 0 });
+        }
+      }
+    }
+    return moves;
+  }
+
+  simulateMove(grid: GridCell[][], row: number, col: number, player: PLAYER): GridCell[][] {
+    const newGrid = grid.map(row => row.map(cell => ({ ...cell })));
+    newGrid[row][col] = { atoms: (newGrid[row][col].atoms || 0) + 1, player };
+    return newGrid;
+  }
+
+  getNextPlayer(current: PLAYER): PLAYER {
+    switch (current) {
+      case PLAYER.RED: return PLAYER.BLUE;
+      case PLAYER.BLUE: return PLAYER.VIOLET;
+      case PLAYER.VIOLET: return PLAYER.BLACK;
+      case PLAYER.BLACK: return PLAYER.RED;
+    }
   }
 
   getBestMove(
@@ -479,35 +594,33 @@ class PersonalityBasedAI {
       powerUps
     };
 
-    const rows = grid.length;
-    const cols = grid[0].length;
-    const validMoves: AIMove[] = [];
-
-    // Generate all valid moves
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        if (isValidMoveForAI(grid, row, col, currentPlayer, isBaseMode, hqs)) {
-          const score = this.evaluateMove(grid, row, col, currentPlayer, gameState);
-          validMoves.push({ row, col, score });
-        }
-      }
-    }
+    const validMoves = this.getValidMoves(grid, currentPlayer, isBaseMode, hqs);
 
     if (validMoves.length === 0) {
       return null;
+    }
+
+    // Use minimax for deeper analysis on important moves
+    for (const move of validMoves) {
+      const simGrid = this.simulateMove(grid, move.row, move.col, currentPlayer);
+      move.score = this.minimax(simGrid, 3, false, -Infinity, Infinity, this.getNextPlayer(currentPlayer), gameState);
+      
+      // Add personality-based randomness
+      const randomFactor = (Math.random() - 0.5) * 50 * personality.baseHuntingThirst;
+      move.score += randomFactor;
     }
 
     // Sort moves by score (highest first)
     validMoves.sort((a, b) => b.score - a.score);
 
     // Use personality to determine move selection randomness
-    const selectionRandomness = personality.riskTaking * 0.4; // 0.2-0.6
+    const selectionRandomness = personality.baseHuntingThirst * 0.3; // 0.06-0.9
     const topMoves = Math.max(1, Math.ceil(validMoves.length * (0.1 + selectionRandomness)));
     const bestMoveIndex = Math.floor(Math.random() * Math.min(topMoves, validMoves.length));
 
     const bestMove = validMoves[bestMoveIndex];
     
-    console.log(`🎭 AI ${currentPlayer} (aggr:${personality.aggressiveness.toFixed(1)}, def:${personality.defensiveness.toFixed(1)}, risk:${personality.riskTaking.toFixed(1)}) chose (${bestMove.row},${bestMove.col}) from top ${topMoves} moves`);
+    console.log(`🎭 AI ${currentPlayer} (aggr:${personality.aggressiveness.toFixed(1)}, def:${personality.defensiveness.toFixed(1)}, baseHunt:${personality.baseHuntingThirst.toFixed(1)}, target:${personality.targetEnemy}) chose (${bestMove.row},${bestMove.col}) with minimax score ${bestMove.score.toFixed(1)}`);
     
     return bestMove;
   }
