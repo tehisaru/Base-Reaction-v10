@@ -145,7 +145,12 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
         
       {grid.map((rowCells, rowIndex) => (
-        <div key={`row-${rowIndex}`} className="flex gap-[2px]" style={{ zIndex: 10, position: 'relative', marginBottom: '2px' }}>
+        <div key={`row-${rowIndex}`} className="flex" style={{ 
+          zIndex: 10, 
+          position: 'relative', 
+          marginBottom: rowIndex < rows - 1 ? '2px' : '0',
+          gap: '2px'
+        }}>
           {rowCells.map((cell, colIndex) => {
             const powerUpType = getPowerUpType(rowIndex, colIndex);
             const { isHQ, health } = getHQInfo(rowIndex, colIndex);
