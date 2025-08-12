@@ -29,15 +29,15 @@ interface StrategicEvaluation {
   baseThreatScore: number;     // How much this threatens enemy bases
 }
 
-// AI Personality traits that change each game
+// AI Personality traits that change each game - MUCH MORE EXTREME
 interface AIPersonality {
-  aggressiveness: number;      // 0.5-1.5 (how much AI prioritizes attacks)
-  defensiveness: number;       // 0.5-1.5 (how much AI prioritizes defense)
-  riskTaking: number;          // 0.5-1.5 (how much AI takes risky moves)
-  powerUpHunting: number;      // 0.5-1.5 (how much AI chases power-ups)
-  territorialness: number;     // 0.5-1.5 (how much AI values territory)
-  cornerPreference: number;    // 0.2-1.8 (preference for corners, can be very low to prevent obsession)
-  spreadTendency: number;      // 0.5-1.5 (tendency to spread vs consolidate)
+  aggressiveness: number;      // 0.2-2.5 (how much AI prioritizes attacks)
+  defensiveness: number;       // 0.2-2.5 (how much AI prioritizes defense)
+  riskTaking: number;          // 0.2-2.5 (how much AI takes risky moves)
+  powerUpHunting: number;      // 0.8-3.0 (how much AI chases power-ups)
+  territorialness: number;     // 0.2-2.5 (how much AI values territory)
+  cornerPreference: number;    // 0.1-2.0 (preference for corners, can be very low to prevent obsession)
+  spreadTendency: number;      // 0.2-2.5 (tendency to spread vs consolidate)
 }
 
 /**
@@ -167,28 +167,21 @@ const evaluateStrategicMove = (
   const cell = grid[row][col];
   const criticalMass = calculateCriticalMass(row, col, rows, cols);
 
-  // 1. POWER-UP SCORING - AI chases power-ups much more aggressively
-  if (gameState.powerUps) {
+  // 1. POWER-UP SCORING - Only in Base Mode (no power-ups in chain reaction)
+  if (gameState.isBaseMode && gameState.powerUps) {
     const powerUpAtPosition = gameState.powerUps.find(pu => pu.row === row && pu.col === col);
     if (powerUpAtPosition) {
-      if (gameState.isBaseMode) {
-        // In base mode, power-ups are extremely valuable
-        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 80 : 60; // Much higher values
-      } else {
-        // In classic mode, still valuable but less critical
-        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 40 : 25;
+        // Power-ups are EXTREMELY valuable - AI should prioritize these highly
+        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 150 : 150; // Much higher values
+    }
+
+    // Strong bonus for being near power-ups - AI should chase them aggressively  
+    gameState.powerUps.forEach(powerUp => {
+      const distanceToPowerUp = Math.abs(powerUp.row - row) + Math.abs(powerUp.col - col);
+      if (distanceToPowerUp <= 3) {
+        evaluation.powerUpScore += (4 - distanceToPowerUp) * 25; // Much stronger proximity bonus
       }
-    }
-    
-    // Bonus for being near power-ups (chase them)
-    if (gameState.isBaseMode) {
-      gameState.powerUps.forEach(powerUp => {
-        const distanceToPowerUp = Math.abs(powerUp.row - row) + Math.abs(powerUp.col - col);
-        if (distanceToPowerUp <= 2) {
-          evaluation.powerUpScore += (3 - distanceToPowerUp) * 10; // Proximity bonus
-        }
-      });
-    }
+    });
   }
 
   // 2. POSITION SCORING - Different strategies for different game modes
@@ -197,8 +190,8 @@ const evaluateStrategicMove = (
   
   if (!gameState.isBaseMode) {
     // CLASSIC MODE: Corners are valuable but not obsessively so, with randomness
-    const cornerBonus = 15 + Math.random() * 25; // 15-40 random bonus
-    const edgeBonus = 8 + Math.random() * 15;   // 8-23 random bonus
+    const cornerBonus = 20 + Math.random() * 20; // 15-40 random bonus
+    const edgeBonus = 8 + Math.random() * 10;   // 8-18 random bonus
     const centerBonus = 2 + Math.random() * 8;  // 2-10 random bonus
     
     if (isCorner) {
@@ -235,9 +228,9 @@ const evaluateStrategicMove = (
     evaluation.territoryScore += isolationBonus;
   } else {
     // BASE MODE: Corners and edges are much less important, focus on center
-    const cornerBonus = 2 + Math.random() * 6;  // 2-8 low corner value
-    const edgeBonus = 1 + Math.random() * 4;    // 1-5 low edge value  
-    const centerBonus = 6 + Math.random() * 8;  // 6-14 higher center value
+    const cornerBonus = 1 + Math.random() * 6;  // 2-8 low corner value
+    const edgeBonus = 3 + Math.random() * 6;    // 1-5 low edge value  
+    const centerBonus = 1 + Math.random() * 6;  // 6-14 higher center value
     
     if (isCorner) {
       evaluation.territoryScore += cornerBonus;
@@ -407,13 +400,13 @@ const calculateChainReactionPotential = (
  */
 function generateAIPersonality(): AIPersonality {
   return {
-    aggressiveness: 0.6 + Math.random() * 0.8,      // 0.6-1.4
-    defensiveness: 0.6 + Math.random() * 0.8,       // 0.6-1.4
-    riskTaking: 0.5 + Math.random() * 1.0,          // 0.5-1.5
-    powerUpHunting: 0.7 + Math.random() * 0.8,      // 0.7-1.5
-    territorialness: 0.6 + Math.random() * 0.8,     // 0.6-1.4
-    cornerPreference: 0.3 + Math.random() * 1.2,    // 0.3-1.5 (can be very low to avoid corner obsession)
-    spreadTendency: 0.5 + Math.random() * 1.0       // 0.5-1.5
+    aggressiveness: 0.2 + Math.random() * 2.3,      // 0.2-2.5 (MUCH MORE EXTREME)
+    defensiveness: 0.2 + Math.random() * 2.3,       // 0.2-2.5 (MUCH MORE EXTREME)
+    riskTaking: 0.2 + Math.random() * 2.3,          // 0.2-2.5 (MUCH MORE EXTREME)
+    powerUpHunting: 0.8 + Math.random() * 2.2,      // 0.8-3.0 (Very high power-up chasing)
+    territorialness: 0.2 + Math.random() * 2.3,     // 0.2-2.5 (MUCH MORE EXTREME)
+    cornerPreference: 0.1 + Math.random() * 1.9,    // 0.1-2.0 (MUCH MORE EXTREME, can be very low)
+    spreadTendency: 0.2 + Math.random() * 2.3       // 0.2-2.5 (MUCH MORE EXTREME)
   };
 }
 

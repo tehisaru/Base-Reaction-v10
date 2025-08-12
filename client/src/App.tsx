@@ -9,7 +9,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/classic" element={<ClassicMode />} />
+        <Route path="/chain-reaction" element={<ClassicMode />} />
         <Route path="/base-reaction" element={<BaseReactionMode />} />
         <Route path="/tutorial" element={<Navigate to="/" replace />} />
         <Route path="/tutorial/:mode" element={<Navigate to="/" replace />} />
