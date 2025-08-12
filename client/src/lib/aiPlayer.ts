@@ -173,14 +173,14 @@ const evaluateStrategicMove = (
     const powerUpAtPosition = gameState.powerUps.find(pu => pu.row === row && pu.col === col);
     if (powerUpAtPosition) {
         // Power-ups are MASSIVELY valuable - AI should prioritize these above almost everything
-        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 80 : 80; // MASSIVE values
+        evaluation.powerUpScore = powerUpAtPosition.type === 'diamond' ? 1000 : 1000; // MASSIVE values
     }
 
     // Extremely strong bonus for being near power-ups - AI should chase them obsessively
     gameState.powerUps.forEach(powerUp => {
       const distanceToPowerUp = Math.abs(powerUp.row - row) + Math.abs(powerUp.col - col);
       if (distanceToPowerUp <= 4) {
-        evaluation.powerUpScore += (5 - distanceToPowerUp) * 20; // MUCH stronger proximity bonus
+        evaluation.powerUpScore += (5 - distanceToPowerUp) * 100; // MUCH stronger proximity bonus
       }
     });
   }

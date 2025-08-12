@@ -131,21 +131,21 @@ const GameBoard: React.FC<GameBoardProps> = ({
         animate={gameStarted ? "visible" : "hidden"}
         variants={boardContainerVariants}
         style={{ 
-          width: cols * CELL_SIZE + (cols - 1) * 2 + 4,
-          height: rows * CELL_SIZE + (rows - 1) * 2 + 4,
+          width: cols * CELL_SIZE + cols * 2 + 24,
+          height: rows * CELL_SIZE + rows * 2 + 24,
           background: "rgba(255, 255, 255, 0.05)",
           border: "none",
           boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)",
           transformOrigin: 'center',
           transform: `scale(${scale})`,
-          padding: '2px',
+          padding: '12px',
           borderRadius: '16px'
         }}
       >
 
         
       {grid.map((rowCells, rowIndex) => (
-        <div key={`row-${rowIndex}`} className="flex gap-[2px]" style={{ zIndex: 10, position: 'relative', marginBottom: rowIndex < rows - 1 ? '5px' : '0' }}>
+        <div key={`row-${rowIndex}`} className="flex gap-[2px]" style={{ zIndex: 10, position: 'relative', marginBottom: '2px' }}>
           {rowCells.map((cell, colIndex) => {
             const powerUpType = getPowerUpType(rowIndex, colIndex);
             const { isHQ, health } = getHQInfo(rowIndex, colIndex);
