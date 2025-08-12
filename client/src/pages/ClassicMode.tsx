@@ -6,6 +6,7 @@ import GameOverOverlay from "../components/Game/GameOverOverlay";
 import { useChainReaction } from "../lib/stores/useChainReaction";
 import { PLAYER_BG_COLORS } from "../lib/constants";
 import { useAITurn } from "../lib/useAITurn";
+import { resetAIPersonalities } from "../lib/aiPlayer";
 import { PlayerSettingsManager } from "../components/Menu/MainMenu";
 
 const ClassicMode: React.FC = () => {
@@ -32,11 +33,13 @@ const ClassicMode: React.FC = () => {
   
   // Initialize classic mode on component mount
   useEffect(() => {
+    resetAIPersonalities(); // Reset AI personalities for each new game
     initClassicMode();
     
     // Set up keyboard shortcut for restarting with R
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "r" || e.key === "R") {
+        resetAIPersonalities(); // Reset AI personalities on restart
         restart();
       }
     };

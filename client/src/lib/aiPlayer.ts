@@ -3,9 +3,7 @@ import { GridCell, HQCell, PowerUpCell } from './stores/useChainReaction';
 import { calculateCriticalMass, isAdjacentTo } from './gameUtils';
 
 export enum AI_STRATEGY {
-  EASY = 'easy',
-  MEDIUM = 'medium', 
-  HARD = 'hard'
+  SMART = 'smart'
 }
 
 interface AIMove {
@@ -29,6 +27,17 @@ interface StrategicEvaluation {
   chainReactionScore: number;  // Potential for large chain reactions
   territoryScore: number;      // Expanding our controlled territory
   baseThreatScore: number;     // How much this threatens enemy bases
+}
+
+// AI Personality traits that change each game
+interface AIPersonality {
+  aggressiveness: number;      // 0.5-1.5 (how much AI prioritizes attacks)
+  defensiveness: number;       // 0.5-1.5 (how much AI prioritizes defense)
+  riskTaking: number;          // 0.5-1.5 (how much AI takes risky moves)
+  powerUpHunting: number;      // 0.5-1.5 (how much AI chases power-ups)
+  territorialness: number;     // 0.5-1.5 (how much AI values territory)
+  cornerPreference: number;    // 0.2-1.8 (preference for corners, can be very low to prevent obsession)
+  spreadTendency: number;      // 0.5-1.5 (tendency to spread vs consolidate)
 }
 
 /**
@@ -187,22 +196,26 @@ const evaluateStrategicMove = (
   const isEdge = row === 0 || row === rows - 1 || col === 0 || col === cols - 1;
   
   if (!gameState.isBaseMode) {
-    // CLASSIC MODE: Corners are very valuable, edges less so
+    // CLASSIC MODE: Corners are valuable but not obsessively so, with randomness
+    const cornerBonus = 15 + Math.random() * 25; // 15-40 random bonus
+    const edgeBonus = 8 + Math.random() * 15;   // 8-23 random bonus
+    const centerBonus = 2 + Math.random() * 8;  // 2-10 random bonus
+    
     if (isCorner) {
-      evaluation.territoryScore += 40; // High corner value for classic mode
+      evaluation.territoryScore += cornerBonus;
     } else if (isEdge) {
-      evaluation.territoryScore += 20; // Medium edge value for classic mode
+      evaluation.territoryScore += edgeBonus;
     } else {
-      evaluation.territoryScore += 5; // Low center value for classic mode
+      evaluation.territoryScore += centerBonus;
     }
     
-    // In classic mode, avoid placing next to enemy cells initially
+    // In classic mode, avoid placing next to enemy cells initially (with some randomness)
     const neighbors = getNeighborsForAI(row, col, rows, cols);
     let enemyNeighborPenalty = 0;
     neighbors.forEach(({nr, nc}) => {
       const neighborCell = grid[nr][nc];
       if (neighborCell.player && neighborCell.player !== currentPlayer) {
-        enemyNeighborPenalty += 15; // Penalty for being next to enemies in classic mode
+        enemyNeighborPenalty += 10 + Math.random() * 10; // 10-20 random penalty
       }
     });
     evaluation.aggressiveScore -= enemyNeighborPenalty;
@@ -217,17 +230,21 @@ const evaluateStrategicMove = (
       }
     });
     if (!hasOwnNeighbor) {
-      isolationBonus += 10; // Bonus for expanding to new areas
+      isolationBonus += 8 + Math.random() * 12; // 8-20 random bonus for spreading
     }
     evaluation.territoryScore += isolationBonus;
   } else {
-    // BASE MODE: Corners and edges are less important
+    // BASE MODE: Corners and edges are much less important, focus on center
+    const cornerBonus = 2 + Math.random() * 6;  // 2-8 low corner value
+    const edgeBonus = 1 + Math.random() * 4;    // 1-5 low edge value  
+    const centerBonus = 6 + Math.random() * 8;  // 6-14 higher center value
+    
     if (isCorner) {
-      evaluation.territoryScore += 5; // Much lower corner value for base mode
+      evaluation.territoryScore += cornerBonus;
     } else if (isEdge) {
-      evaluation.territoryScore += 3; // Much lower edge value for base mode
+      evaluation.territoryScore += edgeBonus;
     } else {
-      evaluation.territoryScore += 8; // Higher center value for base mode
+      evaluation.territoryScore += centerBonus;
     }
   }
 
@@ -386,70 +403,71 @@ const calculateChainReactionPotential = (
 };
 
 /**
- * AGGRESSIVE STRATEGIC AI SYSTEM
- * Focuses on aggressive expansion, power-up acquisition, and smart defense
+ * Generates a random AI personality for each game to prevent predictable behavior
  */
-class AggressiveStrategicAI {
-  private readonly difficultyMultipliers: Record<AI_STRATEGY, number> = {
-    [AI_STRATEGY.EASY]: 0.5,
-    [AI_STRATEGY.MEDIUM]: 0.8,
-    [AI_STRATEGY.HARD]: 1.0
+function generateAIPersonality(): AIPersonality {
+  return {
+    aggressiveness: 0.6 + Math.random() * 0.8,      // 0.6-1.4
+    defensiveness: 0.6 + Math.random() * 0.8,       // 0.6-1.4
+    riskTaking: 0.5 + Math.random() * 1.0,          // 0.5-1.5
+    powerUpHunting: 0.7 + Math.random() * 0.8,      // 0.7-1.5
+    territorialness: 0.6 + Math.random() * 0.8,     // 0.6-1.4
+    cornerPreference: 0.3 + Math.random() * 1.2,    // 0.3-1.5 (can be very low to avoid corner obsession)
+    spreadTendency: 0.5 + Math.random() * 1.0       // 0.5-1.5
   };
+}
+
+/**
+ * PERSONALITY-BASED AI SYSTEM
+ * Each AI has unique personality traits that make it behave differently
+ */
+class PersonalityBasedAI {
+  private personalities: Map<PLAYER, AIPersonality> = new Map();
+  
+  getPersonality(player: PLAYER): AIPersonality {
+    if (!this.personalities.has(player)) {
+      this.personalities.set(player, generateAIPersonality());
+      console.log(`🎭 Generated new personality for ${player}:`, this.personalities.get(player));
+    }
+    return this.personalities.get(player)!;
+  }
+
+  // Reset personalities for new game
+  resetPersonalities(): void {
+    this.personalities.clear();
+  }
 
   evaluateMove(
     grid: GridCell[][],
     row: number,
     col: number,
     currentPlayer: PLAYER,
-    gameState: GameState,
-    difficulty: AI_STRATEGY = AI_STRATEGY.HARD
+    gameState: GameState
   ): number {
     const evaluation = evaluateStrategicMove(grid, row, col, currentPlayer, gameState);
-    const multiplier = this.difficultyMultipliers[difficulty];
+    const personality = this.getPersonality(currentPlayer);
     
-    // Calculate base score with strategic priorities
+    // Calculate base score with personality-influenced priorities
     let baseScore = 0;
     
-    // PRIORITY 1: Power-ups are extremely valuable
-    baseScore += evaluation.powerUpScore * 2.0;
+    // Apply personality traits to scoring
+    baseScore += evaluation.powerUpScore * personality.powerUpHunting * 1.8;
+    baseScore += evaluation.territoryScore * personality.territorialness * personality.cornerPreference * 0.8;
+    baseScore += evaluation.defensiveScore * personality.defensiveness * 2.0;
+    baseScore += evaluation.aggressiveScore * personality.aggressiveness * 1.5;
+    baseScore += evaluation.baseThreatScore * personality.aggressiveness * personality.riskTaking * 1.2;
+    baseScore += evaluation.chainReactionScore * personality.riskTaking * 1.3;
     
-    // PRIORITY 2: Territory control (corners/edges/positioning)
-    baseScore += evaluation.territoryScore * 1.2;
+    // Add significant randomness based on risk-taking personality
+    const baseRandomness = personality.riskTaking * 0.3; // 0.15-0.45
+    const randomness = (Math.random() - 0.5) * 2 * baseRandomness;
+    baseScore += randomness * Math.max(15, Math.abs(baseScore) * 0.2);
     
-    // PRIORITY 3: Defense has higher priority when there are threats
-    if (evaluation.defensiveScore > 0) {
-      baseScore += evaluation.defensiveScore * 2.5; // Much higher defensive priority
-    }
+    // Additional chaos factor to prevent identical games
+    const chaosBonus = (Math.random() - 0.5) * 25 * personality.riskTaking;
+    baseScore += chaosBonus;
     
-    // PRIORITY 4: Aggressive expansion and enemy capture
-    baseScore += evaluation.aggressiveScore * 1.3;
-    
-    // PRIORITY 5: Threaten enemy bases
-    baseScore += evaluation.baseThreatScore * 1.5;
-    
-    // PRIORITY 6: Chain reactions for massive damage
-    baseScore += evaluation.chainReactionScore * 1.1;
-    
-    // Add randomness to prevent predictable behavior
-    const randomnessFactor = this.getRandomnessFactor(difficulty);
-    const randomness = (Math.random() - 0.5) * 2 * randomnessFactor; // -randomnessFactor to +randomnessFactor
-    baseScore += randomness * Math.max(10, baseScore * 0.1); // Scale randomness with move quality
-    
-    // Apply difficulty scaling
-    return baseScore * multiplier;
-  }
-
-  private getRandomnessFactor(difficulty: AI_STRATEGY): number {
-    switch (difficulty) {
-      case AI_STRATEGY.EASY:
-        return 0.4; // High randomness for easy AI
-      case AI_STRATEGY.MEDIUM:
-        return 0.25; // Medium randomness
-      case AI_STRATEGY.HARD:
-        return 0.15; // Low randomness for hard AI
-      default:
-        return 0.2;
-    }
+    return baseScore;
   }
 
   getBestMove(
@@ -457,9 +475,9 @@ class AggressiveStrategicAI {
     currentPlayer: PLAYER,
     isBaseMode: boolean,
     hqs?: HQCell[],
-    powerUps?: PowerUpCell[],
-    difficulty: AI_STRATEGY = AI_STRATEGY.HARD
+    powerUps?: PowerUpCell[]
   ): AIMove | null {
+    const personality = this.getPersonality(currentPlayer);
     const gameState: GameState = {
       grid,
       currentPlayer,
@@ -468,15 +486,15 @@ class AggressiveStrategicAI {
       powerUps
     };
 
-    const validMoves: AIMove[] = [];
     const rows = grid.length;
     const cols = grid[0].length;
+    const validMoves: AIMove[] = [];
 
     // Generate all valid moves
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         if (isValidMoveForAI(grid, row, col, currentPlayer, isBaseMode, hqs)) {
-          const score = this.evaluateMove(grid, row, col, currentPlayer, gameState, difficulty);
+          const score = this.evaluateMove(grid, row, col, currentPlayer, gameState);
           validMoves.push({ row, col, score });
         }
       }
@@ -486,32 +504,29 @@ class AggressiveStrategicAI {
       return null;
     }
 
-    // Sort moves by score (highest first) and add some randomness for lower difficulties
+    // Sort moves by score (highest first)
     validMoves.sort((a, b) => b.score - a.score);
 
-    // Add strategic randomness based on difficulty
-    let bestMoveIndex = 0;
-    if (difficulty === AI_STRATEGY.EASY) {
-      // Easy: Pick from top 50% of moves
-      const topHalf = Math.ceil(validMoves.length * 0.5);
-      bestMoveIndex = Math.floor(Math.random() * topHalf);
-    } else if (difficulty === AI_STRATEGY.MEDIUM) {
-      // Medium: Pick from top 25% of moves
-      const topQuarter = Math.ceil(validMoves.length * 0.25);
-      bestMoveIndex = Math.floor(Math.random() * Math.max(1, topQuarter));
-    }
-    // Hard: Always pick the best move (bestMoveIndex = 0)
+    // Use personality to determine move selection randomness
+    const selectionRandomness = personality.riskTaking * 0.4; // 0.2-0.6
+    const topMoves = Math.max(1, Math.ceil(validMoves.length * (0.1 + selectionRandomness)));
+    const bestMoveIndex = Math.floor(Math.random() * Math.min(topMoves, validMoves.length));
 
     const bestMove = validMoves[bestMoveIndex];
     
-    console.log(`🤖 AI ${currentPlayer} (${difficulty}) evaluated ${validMoves.length} moves, chose (${bestMove.row},${bestMove.col}) with score ${bestMove.score.toFixed(1)}`);
+    console.log(`🎭 AI ${currentPlayer} (aggr:${personality.aggressiveness.toFixed(1)}, def:${personality.defensiveness.toFixed(1)}, risk:${personality.riskTaking.toFixed(1)}) chose (${bestMove.row},${bestMove.col}) from top ${topMoves} moves`);
     
     return bestMove;
   }
 }
 
 // Global AI instance
-const aggressiveAI = new AggressiveStrategicAI();
+const personalityAI = new PersonalityBasedAI();
+
+// Function to reset AI personalities for new games
+export const resetAIPersonalities = () => {
+  personalityAI.resetPersonalities();
+};
 
 /**
  * Main entry point for AI move calculation
@@ -521,13 +536,13 @@ export const getAIMove = (
   currentPlayer: PLAYER,
   isBaseMode: boolean,
   hqs?: HQCell[],
-  strategy: AI_STRATEGY = AI_STRATEGY.HARD,
+  strategy: AI_STRATEGY = AI_STRATEGY.SMART,
   powerUps?: PowerUpCell[]
 ): AIMove | null => {
-  console.log(`🎯 AI ${currentPlayer} starting move calculation with strategy: ${strategy}`);
+  console.log(`🎯 AI ${currentPlayer} starting move calculation with personality-based strategy`);
   
   try {
-    const move = aggressiveAI.getBestMove(grid, currentPlayer, isBaseMode, hqs, powerUps, strategy);
+    const move = personalityAI.getBestMove(grid, currentPlayer, isBaseMode, hqs, powerUps);
     
     if (move) {
       console.log(`✅ AI ${currentPlayer} selected move: (${move.row}, ${move.col}) with score ${move.score.toFixed(1)}`);

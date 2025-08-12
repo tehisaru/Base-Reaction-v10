@@ -97,7 +97,7 @@ export const PlayerSettingsManager = {
   getAIStrategy: (player: PLAYER): AI_STRATEGY => {
     const settings = PlayerSettingsManager.getSettings();
     const playerConfig = settings.playerConfigs.find(config => config.player === player);
-    return playerConfig?.aiStrategy || AI_STRATEGY.WEIGHTS_BASED;
+    return playerConfig?.aiStrategy || AI_STRATEGY.SMART;
   },
   
   // Update a player's control type
@@ -109,14 +109,14 @@ export const PlayerSettingsManager = {
     if (playerConfig) {
       playerConfig.control = control;
       playerConfig.aiStrategy = control === PLAYER_CONTROL.AI ? 
-        (aiStrategy || AI_STRATEGY.HARD) : undefined;
+        (aiStrategy || AI_STRATEGY.SMART) : undefined;
     } else {
       // If player config doesn't exist, create it
       settings.playerConfigs.push({
         player,
         control,
         aiStrategy: control === PLAYER_CONTROL.AI ? 
-          (aiStrategy || AI_STRATEGY.HARD) : undefined
+          (aiStrategy || AI_STRATEGY.SMART) : undefined
       });
     }
     
@@ -148,14 +148,14 @@ const MainMenu: React.FC = () => {
     }
     return 'main';
   });
-  const [tutorialMode, setTutorialMode] = useState<'chain-reaction' | 'base-reaction'>('classic');
+  const [tutorialMode, setTutorialMode] = useState<'chain-reaction' | 'base-reaction'>('chain-reaction');
   const [selectedMode, setSelectedMode] = useState<'chain-reaction' | 'base-reaction'>(() => {
     if (navigationState?.selectedMode) {
       return navigationState.selectedMode;
     }
     return 'chain-reaction';
   });
-  const [aiStrategy, setAIStrategy] = useState<AI_STRATEGY>(AI_STRATEGY.WEIGHTS_BASED);
+  const [aiStrategy, setAIStrategy] = useState<AI_STRATEGY>(AI_STRATEGY.SMART);
   
   // Initialize number of players from existing settings
   const initialNumPlayers = (): 2 | 3 | 4 => {
@@ -309,7 +309,7 @@ const MainMenu: React.FC = () => {
               whileTap={{ scale: 0.95 }}
               transition={{ duration: 0.1 }}
               onClick={() => {
-                setSelectedMode('classic');
+                setSelectedMode('chain-reaction');
                 setMenuScreen('multiplayer');
               }}
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
@@ -402,7 +402,7 @@ const MainMenu: React.FC = () => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => setupSingleplayer(AI_STRATEGY.WEIGHTS_BASED)}
+              onClick={() => setupSingleplayer(AI_STRATEGY.SMART)}
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
               style={{ fontFamily: 'Menlo, monospace' }}
             >
@@ -442,7 +442,7 @@ const MainMenu: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                setTutorialMode('classic');
+                setTutorialMode('chain-reaction');
                 setMenuScreen('tutorial-content');
               }}
               className={`${buttonStyle.base} ${buttonStyle.primary}`}
