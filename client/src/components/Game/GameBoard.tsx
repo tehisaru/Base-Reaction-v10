@@ -144,11 +144,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
       >
 
         
+      <div className="flex flex-col" style={{ gap: '2px' }}>
       {grid.map((rowCells, rowIndex) => (
         <div key={`row-${rowIndex}`} className="flex" style={{ 
           zIndex: 10, 
           position: 'relative', 
-          marginBottom: rowIndex < rows - 1 ? '2px' : '0',
           gap: '2px'
         }}>
           {rowCells.map((cell, colIndex) => {
@@ -198,6 +198,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           })}
         </div>
       ))}
+      </div>
       </motion.div>
     </div>
   );
