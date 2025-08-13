@@ -46,8 +46,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
   // Calculate responsive scale based on viewport
   useEffect(() => {
     const calculateScale = () => {
-      const boardWidth = cols * CELL_SIZE + (cols - 1) * 4 + 8;
-      const boardHeight = rows * CELL_SIZE + (rows - 1) * 4 + 8;
+      const boardWidth = cols * CELL_SIZE + cols * 2 + 24;
+      const boardHeight = rows * CELL_SIZE + rows * 2 + 24;
       
       const availableWidth = window.innerWidth - 32; // Account for padding
       const availableHeight = window.innerHeight - 200; // Account for UI elements
@@ -131,14 +131,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
         animate={gameStarted ? "visible" : "hidden"}
         variants={boardContainerVariants}
         style={{ 
-          width: cols * CELL_SIZE + (cols - 1) * 4 + 8,
-          height: rows * CELL_SIZE + (rows - 1) * 4 + 8,
+          width: cols * CELL_SIZE + cols * 2 + 24,
+          height: rows * CELL_SIZE + rows * 2 + 24,
           background: "rgba(255, 255, 255, 0.05)",
           border: "none",
           boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)",
           transformOrigin: 'center',
           transform: `scale(${scale})`,
-          padding: '4px',
+          padding: '12px',
           borderRadius: '16px'
         }}
       >
@@ -148,8 +148,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <div key={`row-${rowIndex}`} className="flex" style={{ 
           zIndex: 10, 
           position: 'relative', 
-          marginBottom: rowIndex < rows - 1 ? '4px' : '0',
-          gap: '4px'
+          marginBottom: rowIndex < rows - 1 ? '2px' : '0',
+          gap: '2px'
         }}>
           {rowCells.map((cell, colIndex) => {
             const powerUpType = getPowerUpType(rowIndex, colIndex);
